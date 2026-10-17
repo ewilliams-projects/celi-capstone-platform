@@ -3,8 +3,9 @@ __pycache__/
 *.pyc
 .venv/
 
-# Generated outputs (rebuild with: python3 run.py)
+# Generated outputs (rebuild with: python3 run.py); GitHub Actions builds site/ when publishing
 output/
+site/
 
 # Private working documents: keep proposal and meeting notes out of the repo
 *.docx

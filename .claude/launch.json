@@ -2,9 +2,27 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "map",
+      "name": "site",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "output"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8766",
+        "--directory",
+        "site"
+      ],
+      "port": 8766
+    },
+    {
+      "name": "drafts",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8765",
+        "--directory",
+        "output"
+      ],
       "port": 8765
     }
   ]

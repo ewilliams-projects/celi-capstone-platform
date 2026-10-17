@@ -2,6 +2,8 @@
 
 import csv
 import json
+import re
+from datetime import date
 from pathlib import Path
 from typing import List
 
@@ -27,7 +29,28 @@ def write_rankings_csv(scored: List[ScoredNeighborhood], path: Path) -> None:
             ])
 
 
+NEIGHBORHOOD_SECTIONS = [
+    re.compile(r"<!-- NEIGHBORHOODS:.*?<!-- /NEIGHBORHOODS -->\n", re.S),
+    re.compile(r"// NEIGHBORHOODS:.*?// /NEIGHBORHOODS\n", re.S),
+]
+
+
+def _built_date() -> str:
+    today = date.today()
+    return f"{today:%B} {today.day}, {today.year}"
+
+
+def write_site_html(path: Path) -> None:
+    """Write the public page: statewide utility map and pilot map, without the draft neighborhood map."""
+    html = TEMPLATE
+    for section in NEIGHBORHOOD_SECTIONS:
+        html, count = section.subn("", html)
+        assert count == 1, "neighborhood section markers are missing from the template"
+    path.write_text(html.replace("__BUILT__", _built_date()))
+
+
 def write_map_html(scored: List[ScoredNeighborhood], path: Path, sample_data: bool) -> None:
+    """Write the full draft page, including the neighborhood priority map."""
     rows = [
         {
             "rank": rank,
@@ -49,7 +72,8 @@ def write_map_html(scored: List[ScoredNeighborhood], path: Path, sample_data: bo
         '<div class="banner">Sample data for demonstration only. '
         "Not real Denver figures.</div>" if sample_data else ""
     )
-    html = TEMPLATE.replace("__BANNER__", banner).replace("__DATA__", json.dumps(rows))
+    html = (TEMPLATE.replace("__BANNER__", banner).replace("__DATA__", json.dumps(rows))
+            .replace("__BUILT__", _built_date()))
     path.write_text(html)
 
 
@@ -59,6 +83,8 @@ TEMPLATE = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Targeted Analytics for Equitable Gas Decommissioning</title>
+<meta name="description" content="Maps of Colorado's electric and gas utility territories and the Gas Planning Pilot Program communities, to help plan an equitable transition away from aging gas infrastructure.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236250d6'/%3E%3Cpath d='M18 5 9 18h6l-2 9 10-14h-6z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7.1.0/turf.min.js"></script>
@@ -109,6 +135,9 @@ TEMPLATE = """<!doctype html>
   .legend-toggle:hover .legend-action { background:#e6f1fb; }
   .legend-toggle:focus-visible { outline:2px solid #1c5cab; outline-offset:3px; border-radius:4px; }
   .legend-body { margin-top:8px; padding-top:8px; border-top:1px solid var(--line); }
+  .site-footer { margin:24px 20px 32px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted);
+                 font-size:12px; line-height:1.55; max-width:90ch; }
+  .site-footer p { margin:0 0 8px; }
   .county-label span { position:absolute; transform:translate(-50%, -50%); font-size:11px; font-weight:600;
                        color:#2b2b29; white-space:nowrap; letter-spacing:.02em;
                        text-shadow:0 0 3px #fff, 0 0 3px #fff, 0 0 2px #fff; }
@@ -184,6 +213,7 @@ TEMPLATE = """<!doctype html>
 <section class="state"><div id="pilotmap" role="img"
   aria-label="Map of the five Gas Planning Pilot Program communities: Boulder, Denver, Golden and Breckenridge, where Xcel Energy provides both gas and electricity, and Winter Park, where Xcel provides gas and Mountain Parks Electric provides electricity."></div></section>
 
+<!-- NEIGHBORHOODS: draft section, left out of the published site -->
 <header>
   <h2>Where to plan neighborhood-scale electrification first</h2>
   <p>Circles show each neighborhood's priority (darker = higher). Circle size shows the number of homes.
@@ -199,6 +229,15 @@ __BANNER__
     </table>
   </div>
 </main>
+<!-- /NEIGHBORHOODS -->
+<footer class="site-footer">
+  <p><b>About this prototype.</b> Built for a CELI capstone. Utility territories are approximate, drawn from public
+     data that sometimes overlaps or disagrees, and are not official service territory maps. Check with the
+     utilities or the Colorado PUC before relying on them.</p>
+  <p>Data: electric territories from HIFLD / Oak Ridge National Laboratory; gas territories from Colorado GeoData
+     (State of Colorado, provided without warranty); county boundaries, city limits and roads from the U.S. Census
+     Bureau; pilot communities from the Colorado PUC. Basemap tiles &copy; Esri. Last updated __BUILT__.</p>
+</footer>
 <script>
 // ---- Map 1: statewide electric and gas service territories ----
 // Electric: federal HIFLD retail service territories (public use), as kept by the National
@@ -678,6 +717,7 @@ pilotLegend.onAdd = () => {
 };
 pilotLegend.addTo(pilotMap);
 
+// NEIGHBORHOODS: draft section, left out of the published site
 // ---- Map 2: neighborhood priorities ----
 const DATA = __DATA__;
 const money = v => '$' + (v / 1e6).toFixed(1) + 'M';
@@ -720,6 +760,7 @@ legend.onAdd = () => {
   return el;
 };
 legend.addTo(map);
+// /NEIGHBORHOODS
 </script>
 </body>
 </html>
