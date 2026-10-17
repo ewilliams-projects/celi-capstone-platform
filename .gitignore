@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Generated outputs (rebuild with: python3 run.py)
+output/
+
+# Private working documents: keep proposal and meeting notes out of the repo
+*.docx
+
+.DS_Store
