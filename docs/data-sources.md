@@ -16,6 +16,7 @@ with who holds the data and how to get it. The prototype runs today on sample va
 | `lat`, `lon` | Neighborhood location | Denver statistical neighborhoods | Public | Approximate centers in the sample |
 | Electric service territories | Where Xcel provides electricity | Federal HIFLD data (Oak Ridge National Laboratory, 2023), [copy kept by the National Broadband Availability Map](https://www.arcgis.com/home/item.html?id=597555ce8e4a4892a030784a7c657fdd) | Public use | On the statewide map |
 | Same-utility areas | Where one utility provides both electricity and gas | Computed in the browser from the two layers above | Public | On the statewide map |
+| County boundaries | Map reference (county names show when zoomed in) | [U.S. Census Bureau TIGERweb](https://tigerweb.geo.census.gov/) | Public domain | On the statewide map |
 | Gas service territories | Where Xcel provides gas | [Colorado GeoData](https://geodata.colorado.gov/datasets/47935f56eddd4d1781328c60c8517c96_0/explore) | Public | On the statewide map |
 
 ## Policy context

@@ -101,6 +101,9 @@ TEMPLATE = """<!doctype html>
   .legend-toggle:hover .legend-action { background:#e6f1fb; }
   .legend-toggle:focus-visible { outline:2px solid #1c5cab; outline-offset:3px; border-radius:4px; }
   .legend-body { margin-top:8px; padding-top:8px; border-top:1px solid var(--line); }
+  .county-label span { position:absolute; transform:translate(-50%, -50%); font-size:11px; font-weight:600;
+                       color:#2b2b29; white-space:nowrap; letter-spacing:.02em;
+                       text-shadow:0 0 3px #fff, 0 0 3px #fff, 0 0 2px #fff; }
   .legend.collapsed .legend-body { display:none; }
   .legend .toggle input { margin:0; cursor:pointer; }
   .legend .toggle input:disabled + span { color:var(--muted); }
@@ -140,7 +143,8 @@ TEMPLATE = """<!doctype html>
   <a href="https://www.arcgis.com/home/item.html?id=597555ce8e4a4892a030784a7c657fdd" target="_blank" rel="noopener">Electric Retail Service Territories</a>
   (federal HIFLD data from Oak Ridge National Laboratory, 2023; public use). Gas:
   <a href="https://geodata.colorado.gov/datasets/47935f56eddd4d1781328c60c8517c96_0/explore" target="_blank" rel="noopener">Gas Utility Service Territories</a>
-  (Colorado GeoData).
+  (Colorado GeoData). Counties:
+  <a href="https://tigerweb.geo.census.gov/" target="_blank" rel="noopener">U.S. Census Bureau TIGERweb</a> (public domain).
   <span id="state-status"></span></div>
 <section class="state"><div id="statemap"></div></section>
 
@@ -165,6 +169,8 @@ __BANNER__
 // Broadband Availability Map after HIFLD Open shut down. Gas: Colorado GeoData.
 const ELECTRIC_URL = 'https://services3.arcgis.com/OYP7N6mAJJCyH6hd/arcgis/rest/services/Electric_Retail_Service_Territories_HIFLD/FeatureServer/0/query';
 const GAS_URL = 'https://services3.arcgis.com/DgjqnJA1rgO92Soi/arcgis/rest/services/Gas_Utility_Service_Territories/FeatureServer/0/query';
+// County boundaries straight from the Census Bureau (public domain), Colorado is state FIPS 08.
+const COUNTY_URL = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/1/query';
 // Shapes are simplified to about 50 m (0.0005 degrees) so neighboring borders still line up.
 const geojsonQuery = (url, fields, extra) => url + '?' + new URLSearchParams(Object.assign({
   where: '1=1', outFields: fields, outSR: '4326', geometryPrecision: '5',
@@ -207,11 +213,11 @@ function clipToColorado(fc) {
 // never the only cue.
 const INK = '#3d3d3a';
 const OWNERSHIP = {
-  iou:     {label: 'Investor-owned', fill: '#2a78d6', ink: '#1c5cab', dash: '10 5'},
-  muni:    {label: 'Municipal',      fill: '#1baf7a', ink: '#0f7a55', dash: '4 4'},
+  iou:     {label: 'Investor-owned', fill: '#2a78d6', ink: '#1c5cab', dash: '8 4'},
+  muni:    {label: 'Municipal',      fill: '#1baf7a', ink: '#0f7a55', dash: '3 3'},
   coop:    {label: 'Cooperative',    fill: '#d9e4bf'},
   // Private is a deliberate neutral (near-black, dotted): a 4th hue would fail the color-blind checks.
-  private: {label: 'Private',        ink: '#2b2b29', dash: '1 6'}
+  private: {label: 'Private',        ink: '#2b2b29', dash: '1 4'}
 };
 // Electric utilities by ownership. A few out-of-state public power districts and the Navajo Tribal
 // Utility Authority cross the border in small slivers; they're grey and not in the legend.
@@ -342,6 +348,8 @@ const GAS_TYPES = {
   'MUNICIPAL': {label: OWNERSHIP.muni.label, color: OWNERSHIP.muni.ink, dash: OWNERSHIP.muni.dash},
   'PRIVATE': {label: OWNERSHIP.private.label, color: OWNERSHIP.private.ink, dash: OWNERSHIP.private.dash}
 };
+// Fine gas lines; the dotted private line is a little heavier so its dots stay visible.
+const gasLineWidth = t => t.dash === OWNERSHIP.private.dash ? 2 : 1.25;
 const gasType = p => GAS_TYPES[(p.TYPE || '').toUpperCase()] || {label: titleCase(p.TYPE) || 'Not reported', color: INK, dash: '2 4'};
 const fmt = n => (n == null ? 'n/a' : Number(n).toLocaleString());
 
@@ -362,7 +370,25 @@ function addBasemap(m, extraAttribution) {
 
 const COLORADO_BOUNDS = [[COLORADO_BBOX[1], COLORADO_BBOX[0]], [COLORADO_BBOX[3], COLORADO_BBOX[2]]];
 const stateMap = L.map('statemap').fitBounds(COLORADO_BOUNDS);
-addBasemap(stateMap, 'Electric: HIFLD/ORNL | Gas: Colorado GeoData');
+addBasemap(stateMap, 'Electric: HIFLD/ORNL | Gas: Colorado GeoData | Counties: U.S. Census Bureau');
+// County lines sit in their own pane: above the utility layers so the 80% fills don't hide them,
+// below the basemap's place names, and never catching clicks meant for the territories.
+stateMap.createPane('counties');
+stateMap.getPane('counties').style.zIndex = 450;
+stateMap.getPane('counties').style.pointerEvents = 'none';
+const COUNTY_LINE = '#4a4a46';
+const countyLayer = L.geoJSON(null, {
+  pane: 'counties', interactive: false,
+  style: {color: COUNTY_LINE, weight: 0.9, opacity: 0.75, fill: false}
+});
+// County names appear once zoomed in far enough to read them without clutter.
+const COUNTY_LABEL_MIN_ZOOM = 8;
+const countyLabels = L.layerGroup();
+function updateCountyLabels() {
+  const show = stateMap.hasLayer(countyLayer) && stateMap.getZoom() >= COUNTY_LABEL_MIN_ZOOM;
+  if (show) countyLabels.addTo(stateMap); else stateMap.removeLayer(countyLabels);
+}
+stateMap.on('zoomend', updateCountyLabels);
 
 const electricLayer = L.geoJSON(null, {
   // Thin white borders keep neighboring territories from blending together.
@@ -383,7 +409,7 @@ const gasLayer = L.geoJSON(null, {
   style: f => {
     const t = gasType(f.properties);
     // Transparent fill keeps the inside clickable without tinting the electric colors.
-    return {color: t.color, weight: t.dash === OWNERSHIP.private.dash ? 3 : 2, dashArray: t.dash,
+    return {color: t.color, weight: gasLineWidth(t), dashArray: t.dash,
             lineCap: 'round', fillColor: t.color, fillOpacity: 0};
   },
   onEachFeature: (f, layer) => {
@@ -398,7 +424,7 @@ const gasLayer = L.geoJSON(null, {
 // A white halo under each gas line keeps the dashes readable over any electric fill.
 const gasHalo = L.geoJSON(null, {
   interactive: false,
-  style: f => ({color: '#ffffff', weight: gasType(f.properties).dash === OWNERSHIP.private.dash ? 5.5 : 4.5,
+  style: f => ({color: '#ffffff', weight: gasLineWidth(gasType(f.properties)) + 2,
                 opacity: 0.9, lineCap: 'round', fill: false})
 });
 
@@ -423,6 +449,20 @@ const sameUtilityLayer = L.geoJSON(null, {
 });
 
 const status = document.getElementById('state-status');
+fetch(geojsonQuery(COUNTY_URL, 'BASENAME', {where: "STATE='08'"}))
+  .then(r => r.json())
+  .then(counties => {
+    countyLayer.addData(counties);
+    counties.features.forEach(f => {
+      const at = window.turf ? turf.pointOnFeature(f).geometry.coordinates : null;
+      if (at) L.marker([at[1], at[0]], {
+        pane: 'counties', interactive: false, keyboard: false,
+        icon: L.divIcon({className: 'county-label', html: `<span>${f.properties.BASENAME}</span>`, iconSize: [0, 0]})
+      }).addTo(countyLabels);
+    });
+    showIfChecked('counties');
+  })
+  .catch(() => setLayerAvailable('counties', false));
 Promise.all([
   fetch(geojsonQuery(ELECTRIC_URL, 'NAME,TYPE,CUSTOMERS,HOLDING_CO', ELECTRIC_QUERY)).then(r => r.json()),
   fetch(geojsonQuery(GAS_URL, 'NAME,HOLDINGCO,TYPE,TOTAL_CUST')).then(r => r.json())
@@ -444,7 +484,7 @@ Promise.all([
 });
 
 // The legend doubles as the layer switcher: each section heading has a checkbox.
-const STATE_LAYERS = {electric: electricLayer, gas: gasLayer, same: sameUtilityLayer};
+const STATE_LAYERS = {electric: electricLayer, gas: gasLayer, same: sameUtilityLayer, counties: countyLayer};
 const layerToggle = name => document.querySelector(`.legend input[data-layer="${name}"]`);
 const HALOS = {gas: gasHalo};
 function showIfChecked(name) {
@@ -458,6 +498,7 @@ function showIfChecked(name) {
     if (halo) stateMap.removeLayer(halo);
   }
   restackLayers();
+  updateCountyLabels();
   if (box) box.closest('.group').classList.toggle('off', !on);
 }
 // Whatever order the checkboxes are clicked in, draw electric fills at the bottom, then the gas
@@ -483,8 +524,8 @@ stateLegend.onAdd = () => {
     svg(`<line x1="2" y1="7" x2="22" y2="7" stroke="${color}" stroke-width="${width}" stroke-dasharray="${dash}" stroke-linecap="round"/>`);
   const hatchSwatch = pattern =>
     svg(`<rect x="1" y="1" width="22" height="12" rx="2" fill="url(#${pattern})" stroke="${INK}" stroke-width="1.2"/>`);
-  const group = (name, title, rows) => `<div class="group">
-    <label class="toggle"><input type="checkbox" data-layer="${name}" autocomplete="off" checked><span>${title}</span></label>${rows}</div>`;
+  const group = (name, title, rows, checked = true) => `<div class="group">
+    <label class="toggle"><input type="checkbox" data-layer="${name}" autocomplete="off"${checked ? ' checked' : ''}><span>${title}</span></label>${rows}</div>`;
   el.innerHTML =
     `<button type="button" class="legend-toggle" aria-label="Hide legend" aria-expanded="true" aria-controls="state-legend-body">
        <span class="legend-title">Legend</span><span class="legend-action">Hide</span></button>` +
@@ -494,11 +535,13 @@ stateLegend.onAdd = () => {
         `<div class="row">${fillSwatch(t.color, t.opacity)}${t.label}</div>`).join('')) +
     group('gas', 'Gas Utilities',
       Object.values(GAS_TYPES).map(t =>
-        `<div class="row">${lineSwatch(t.color, t.dash, t.dash === OWNERSHIP.private.dash ? 3 : 2)}${t.label}</div>`).join('')) +
+        `<div class="row">${lineSwatch(t.color, t.dash, gasLineWidth(t))}${t.label}</div>`).join('')) +
     group('same', 'Overlapping Service Areas',
       Object.values(OVERLAP_PATTERNS).map(o =>
         `<div class="row">${hatchSwatch(o.pattern)}${o.label}</div>`).join('') +
       `<div class="row">${svg(`<rect x="1" y="1" width="22" height="12" rx="2" fill="none" stroke="${INK}" stroke-width="1.2" stroke-dasharray="4 3"/>`)}Uncertain, overlapping utility boundaries</div>`) +
+    group('counties', 'County Boundaries',
+      `<div class="row">${lineSwatch(COUNTY_LINE, 'none', 1.2)}County line (names show when zoomed in)</div>`, false) +
     `</div>`;
   el.querySelectorAll('input[data-layer]').forEach(box =>
     box.addEventListener('change', () => showIfChecked(box.dataset.layer)));

@@ -22,7 +22,8 @@ This prints the top 10 neighborhoods and writes:
 - `output/map.html`: two interactive maps (open it in a browser):
   1. Colorado electric and gas utility service territories, loaded live (needs an internet
      connection), with Xcel Energy highlighted. Electric data is federal HIFLD data, and gas
-     data comes from Colorado GeoData. See `docs/data-sources.md`.
+     data comes from Colorado GeoData, and county boundaries come from the U.S. Census Bureau.
+     See `docs/data-sources.md`.
   2. Neighborhood priorities with a ranked list
 - `output/rankings.csv`: the full table with each factor score and cost estimate
 
