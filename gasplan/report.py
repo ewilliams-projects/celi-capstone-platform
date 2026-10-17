@@ -61,6 +61,7 @@ TEMPLATE = """<!doctype html>
 <title>Gas Decommissioning Priorities</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@7.1.0/turf.min.js"></script>
 <style>
   :root { --ink:#1d2433; --muted:#5b6475; --line:#e3e6ec; --bg:#fafbfc; --accent:#b4441f; }
   * { box-sizing: border-box; }
@@ -104,6 +105,7 @@ TEMPLATE = """<!doctype html>
 <header>
   <h1>Colorado utility service territories</h1>
   <p>Where Xcel Energy (Public Service Co. of Colorado) provides electricity, gas, or both.
+     Orange and yellow areas get electricity and gas from the same utility.
      Click a territory for details, and use the layer control to switch layers on or off.</p>
 </header>
 <div class="note">Loaded live. Electric:
@@ -135,19 +137,44 @@ __BANNER__
 // Broadband Availability Map after HIFLD Open shut down. Gas: Colorado GeoData.
 const ELECTRIC_URL = 'https://services3.arcgis.com/OYP7N6mAJJCyH6hd/arcgis/rest/services/Electric_Retail_Service_Territories_HIFLD/FeatureServer/0/query';
 const GAS_URL = 'https://services3.arcgis.com/DgjqnJA1rgO92Soi/arcgis/rest/services/Gas_Utility_Service_Territories/FeatureServer/0/query';
+// Shapes are simplified to about 50 m (0.0005 degrees) so neighboring borders still line up.
 const geojsonQuery = (url, fields, extra) => url + '?' + new URLSearchParams(Object.assign({
-  where: '1=1', outFields: fields, outSR: '4326', geometryPrecision: '4',
-  maxAllowableOffset: '0.002', f: 'geojson'
+  where: '1=1', outFields: fields, outSR: '4326', geometryPrecision: '5',
+  maxAllowableOffset: '0.0005', f: 'geojson'
 }, extra));
+// Colorado's border is (almost exactly) a box of latitude and longitude lines.
+const COLORADO_BBOX = [-109.0603, 36.9924, -102.0415, 41.0034];  // west, south, east, north
 // The national electric layer is filtered to territories that touch Colorado, not to STATE='CO':
 // some Colorado providers (e.g. Black Hills Colorado Electric) are listed under out-of-state addresses.
-const COLORADO_ENVELOPE = {
-  geometry: '-109.06,36.99,-102.04,41.0', geometryType: 'esriGeometryEnvelope', inSR: '4326',
-  spatialRel: 'esriSpatialRelIntersects', maxAllowableOffset: '0.005'
+// WAPA and Deseret are left out: they sell wholesale power to utilities, not to homes, and their
+// territories are drawn across most of the state underneath the retail utilities.
+const ELECTRIC_QUERY = {
+  where: "NAME NOT LIKE 'WAPA%' AND NAME NOT LIKE 'DESERET%'",
+  geometry: COLORADO_BBOX.join(','), geometryType: 'esriGeometryEnvelope', inSR: '4326',
+  spatialRel: 'esriSpatialRelIntersects'
 };
 
-const ELECTRIC_COLORS = {xcel: '#2563eb', iou: '#93c5fd', muni: '#5eead4', coop: '#d9f99d', federal: '#e9d5ff'};
-const ELECTRIC_LABELS = {iou: 'Other investor-owned', muni: 'Municipal', coop: 'Cooperative', federal: 'Federal'};
+// Cut every shape at the Colorado border. Clipping leaves empty rings for parts that were
+// fully outside, so those are removed, and shapes with nothing left are dropped.
+function clipToColorado(fc) {
+  if (!window.turf) return fc;
+  const cleanPolygon = rings => {
+    const kept = rings.filter(r => r.length >= 4);
+    return kept.length && rings[0].length >= 4 ? kept : null;
+  };
+  const features = fc.features.map(f => {
+    const g = turf.bboxClip(f, COLORADO_BBOX).geometry;
+    const polygons = (g.type === 'Polygon' ? [g.coordinates] : g.coordinates)
+      .map(cleanPolygon).filter(Boolean);
+    if (!polygons.length) return null;
+    const clipped = turf.multiPolygon(polygons, f.properties);
+    return turf.area(clipped) > 1 ? clipped : null;
+  }).filter(Boolean);
+  return turf.featureCollection(features);
+}
+
+const ELECTRIC_COLORS = {xcel: '#2563eb', iou: '#93c5fd', muni: '#5eead4', coop: '#d9f99d'};
+const ELECTRIC_LABELS = {iou: 'Other investor-owned', muni: 'Municipal', coop: 'Cooperative'};
 const isXcelElectric = p => /XCEL/i.test(p.HOLDING_CO || '');
 // About half the Colorado records have TYPE 'NOT AVAILABLE', so fall back to the utility's name.
 function electricType(p) {
@@ -155,9 +182,49 @@ function electricType(p) {
   if (t === 'INVESTOR OWNED') return 'iou';
   if (t === 'MUNICIPAL' || /^(CITY|TOWN) OF/.test(name)) return 'muni';
   if (t === 'COOPERATIVE' || /COOP|ELEC ASSN|ELECTRIC ASSN/.test(name)) return 'coop';
-  if (t === 'FEDERAL') return 'federal';
   return 'other';
 }
+// Keys that identify the same company in both datasets, whose names are spelled differently
+// (e.g. electric "CITY OF TRINIDAD - (CO)" vs gas "TRINIDAD, CITY OF").
+function electricCompanyKey(p) {
+  const name = (p.NAME || '').toUpperCase();
+  if (/XCEL/.test(p.HOLDING_CO || '')) return 'XCEL';
+  if (/^BLACK HILLS COLORADO ELECTRIC/.test(name)) return 'BLACK HILLS';
+  const muni = name.match(/^(?:CITY|TOWN) OF ([A-Z .]+?)(?:\s*-?\s*\(CO\))?$/);
+  return muni ? 'MUNI ' + muni[1].trim() : null;
+}
+function gasCompanyKey(p) {
+  const name = (p.NAME || '').toUpperCase();
+  if (/PUBLIC SERVICE CO OF COLORADO/.test(name) || /XCEL/.test(p.HOLDINGCO || '')) return 'XCEL';
+  if (/BLACK HILLS/.test(name)) return 'BLACK HILLS';
+  if (name === 'COLORADO SPRINGS UTILITIES') return 'MUNI COLORADO SPRINGS';
+  const muni = name.match(/^(.+), (?:CITY|TOWN) OF$/) || name.match(/^(.+) MUNICIPAL GAS SYSTEM$/);
+  return muni ? 'MUNI ' + muni[1].trim() : null;
+}
+const COMPANY_LABELS = {'XCEL': 'Xcel Energy', 'BLACK HILLS': 'Black Hills Energy (same parent company)'};
+const companyLabel = key => COMPANY_LABELS[key] || 'City of ' + titleCase(key.replace(/^MUNI /, ''));
+
+// Intersect each electric territory with each gas territory run by the same company.
+function sameUtilityAreas(electric, gas) {
+  const out = [];
+  electric.features.forEach(e => {
+    const key = electricCompanyKey(e.properties);
+    if (!key) return;
+    gas.features.filter(g => gasCompanyKey(g.properties) === key).forEach(g => {
+      try {
+        const overlap = turf.intersect(turf.featureCollection([e, g]));
+        if (overlap) {
+          overlap.properties = {key, sqmi: turf.area(overlap) / 2589988.11};
+          out.push(overlap);
+        }
+      } catch (err) {
+        console.warn('Could not intersect', key, err);
+      }
+    });
+  });
+  return turf.featureCollection(out);
+}
+
 const titleCase = s => (s || '').toLowerCase().replace(/\\b\\w/g, c => c.toUpperCase());
 const isXcelGas = p => /PUBLIC SERVICE CO/i.test(p.NAME || '') || /XCEL/i.test(p.HOLDINGCO || '');
 const fmt = n => (n == null ? 'n/a' : Number(n).toLocaleString());
@@ -177,7 +244,7 @@ function addBasemap(m, extraAttribution) {
   }).addTo(m);
 }
 
-const COLORADO_BOUNDS = [[36.99, -109.06], [41.0, -102.04]];
+const COLORADO_BOUNDS = [[COLORADO_BBOX[1], COLORADO_BBOX[0]], [COLORADO_BBOX[3], COLORADO_BBOX[2]]];
 const stateMap = L.map('statemap').fitBounds(COLORADO_BOUNDS);
 addBasemap(stateMap, 'Electric: HIFLD/ORNL | Gas: Colorado GeoData');
 const layerControl = L.control.layers(null, null, {collapsed: false}).addTo(stateMap);
@@ -209,15 +276,35 @@ const gasLayer = L.geoJSON(null, {
   }
 });
 
+const sameUtilityLayer = L.geoJSON(null, {
+  style: f => ({
+    color: '#9a3412', weight: 1.5,
+    fillColor: f.properties.key === 'XCEL' ? '#f97316' : '#facc15', fillOpacity: 0.65
+  }),
+  onEachFeature: (f, layer) => {
+    const p = f.properties;
+    layer.bindPopup(`<div class="popup"><h3>${companyLabel(p.key)}</h3><table>
+      <tr><td>Service</td><td>Electric and gas from the same utility</td></tr>
+      <tr><td>Area</td><td>${fmt(Math.round(p.sqmi))} sq mi</td></tr></table></div>`);
+  }
+});
+
 const status = document.getElementById('state-status');
 Promise.all([
-  fetch(geojsonQuery(ELECTRIC_URL, 'NAME,TYPE,CUSTOMERS,HOLDING_CO', COLORADO_ENVELOPE)).then(r => r.json()),
+  fetch(geojsonQuery(ELECTRIC_URL, 'NAME,TYPE,CUSTOMERS,HOLDING_CO', ELECTRIC_QUERY)).then(r => r.json()),
   fetch(geojsonQuery(GAS_URL, 'NAME,HOLDINGCO,TYPE,TOTAL_CUST')).then(r => r.json())
-]).then(([electric, gas]) => {
+]).then(([electricRaw, gasRaw]) => {
+  const electric = clipToColorado(electricRaw), gas = clipToColorado(gasRaw);
   electricLayer.addData(electric).addTo(stateMap);
   gasLayer.addData(gas).addTo(stateMap);
   layerControl.addOverlay(electricLayer, 'Electric utilities (fill)');
   layerControl.addOverlay(gasLayer, 'Gas utilities (dashed outline)');
+  if (window.turf) {
+    sameUtilityLayer.addData(sameUtilityAreas(electric, gas)).addTo(stateMap);
+    layerControl.addOverlay(sameUtilityLayer, 'Same electric &amp; gas utility');
+  } else {
+    status.textContent = 'Could not load the overlap tool, so the same-utility layer is hidden.';
+  }
 }).catch(() => {
   status.textContent = 'Could not load the utility layers. Check your internet connection and reload.';
 });
@@ -231,7 +318,10 @@ stateLegend.onAdd = () => {
     Object.entries(ELECTRIC_LABELS).map(([k, v]) => `<div class="row">${sw(ELECTRIC_COLORS[k])}${v}</div>`).join('') +
     '<b style="display:block;margin-top:6px">Gas</b>' +
     `<div class="row">${sw('transparent', 'border:2px dashed #7c3aed')}Xcel Energy</div>` +
-    `<div class="row">${sw('transparent', 'border:2px dashed #6b7280')}Other gas utility</div>`;
+    `<div class="row">${sw('transparent', 'border:2px dashed #6b7280')}Other gas utility</div>` +
+    '<b style="display:block;margin-top:6px">Same utility for both</b>' +
+    `<div class="row">${sw('#f97316')}Xcel Energy</div>` +
+    `<div class="row">${sw('#facc15')}Other utility</div>`;
   return el;
 };
 stateLegend.addTo(stateMap);

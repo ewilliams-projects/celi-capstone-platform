@@ -15,6 +15,7 @@ with who holds the data and how to get it. The prototype runs today on sample va
 | `gas_main_miles` | Size of the gas system to replace | Xcel (estimate from street miles until then) | Not shared | Estimate |
 | `lat`, `lon` | Neighborhood location | Denver statistical neighborhoods | Public | Approximate centers in the sample |
 | Electric service territories | Where Xcel provides electricity | Federal HIFLD data (Oak Ridge National Laboratory, 2023), [copy kept by the National Broadband Availability Map](https://www.arcgis.com/home/item.html?id=597555ce8e4a4892a030784a7c657fdd) | Public use | On the statewide map |
+| Same-utility areas | Where one utility provides both electricity and gas | Computed in the browser from the two layers above | Public | On the statewide map |
 | Gas service territories | Where Xcel provides gas | [Colorado GeoData](https://geodata.colorado.gov/datasets/47935f56eddd4d1781328c60c8517c96_0/explore) | Public | On the statewide map |
 
 ## Policy context
@@ -34,3 +35,27 @@ The [CDOT Utilities Boundaries](https://geodata.colorado.gov/datasets/cdot::util
 contradicts itself: its license says use is limited to people named in a Master Service Agreement with
 Platts (S&P Global), while its description says there are no restrictions. The federal HIFLD layer has no
 such restriction. HIFLD Open shut down in 2025, so the copy used here is a snapshot that won't be updated.
+
+## How same-utility areas are found
+
+`gasplan/report.py` matches companies across the two layers, since their names are spelled differently
+(e.g. electric "CITY OF TRINIDAD - (CO)" and gas "TRINIDAD, CITY OF"), then intersects each matched pair
+of territories with Turf.js. Matches: Xcel Energy, Black Hills (Black Hills Colorado Electric and Black
+Hills Energy gas share a parent company), and the cities of Colorado Springs, Trinidad, Fort Morgan and
+Center. Areas are approximate because the shapes are simplified for faster loading.
+
+## Map cleanup and known data problems
+
+The statewide map leaves out WAPA (Western Area Power Administration) and Deseret Generation &
+Transmission. They sell wholesale power to utilities, not to homes, but the federal layer draws them
+across most of Colorado underneath the retail utilities. Shapes are simplified to about 50 m and cut
+at the Colorado border.
+
+Some overlaps between electric territories remain in the source data and aren't fixed here:
+- Town of Oak Creek's territory (about 655 customers) is drawn over roughly 2,300 sq mi of Yampa Valley
+  Electric's area, which looks like a data error.
+- Southwestern Electric Coop (NM) and Tri-County Electric Coop (OK) extend thousands of square miles
+  into southeast Colorado, overlapping San Isabel and Southeast Colorado Power.
+- Xcel overlaps neighboring co-ops in places (about 1,600 sq mi with Poudre Valley REA; about 210 sq mi
+  with Grand Valley Power). Some service areas really are interleaved more finely than this data shows.
+For exact service territories, use the Colorado PUC's certificated territory maps.
