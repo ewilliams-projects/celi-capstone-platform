@@ -164,6 +164,10 @@ TEMPLATE = """<!doctype html>
     .page-header { padding:18px 16px 12px; }
     .page-header h1 { font-size:22px; }
   }
+  @media (max-width: 600px) {
+    /* Leave room for the zoom buttons on the left when the legend opens at the top right. */
+    #statemap .legend { max-width:calc(100vw - 110px); }
+  }
 </style>
 </head>
 <body>
@@ -198,7 +202,8 @@ TEMPLATE = """<!doctype html>
        Colors show ownership on both layers: electric territories are filled, gas territories are outlined.
        Hatched areas get electricity and gas from the same utility (for Black Hills, from two companies with the same
        parent); dashed outlines without hatching are uncertain because the data also lists another utility there.
-       Click a territory for details, and use the checkboxes in the legend to switch layers on or off.</p>
+       Click a territory for details, use the checkboxes in the legend to switch layers on or off, and zoom with
+       the + and &minus; buttons, a double-click, or by pinching.</p>
   </div>
   <p class="note">Map data loads live from its sources, so it can change between visits.
     Electric: <a href="https://www.arcgis.com/home/item.html?id=597555ce8e4a4892a030784a7c657fdd" target="_blank" rel="noopener">Electric Retail Service Territories</a>,
@@ -503,7 +508,9 @@ function addBasemap(m, extraAttribution, {placeNames = true} = {}) {
 }
 
 const COLORADO_BOUNDS = [[COLORADO_BBOX[1], COLORADO_BBOX[0]], [COLORADO_BBOX[3], COLORADO_BBOX[2]]];
-const stateMap = L.map('statemap').fitBounds(COLORADO_BOUNDS);
+// Scroll-wheel zoom is off so scrolling the page doesn't get caught by the map;
+// the +/- buttons, double-click and pinch still zoom.
+const stateMap = L.map('statemap', {scrollWheelZoom: false}).fitBounds(COLORADO_BOUNDS);
 addBasemap(stateMap);
 // County lines sit in their own pane: above the utility layers so the 80% fills don't hide them,
 // below the basemap's place names, and never catching clicks meant for the territories.
@@ -679,7 +686,9 @@ function setLayerAvailable(name, available) {
   if (box) { box.disabled = !available; showIfChecked(name); }
 }
 
-const stateLegend = L.control({position: 'bottomleft'});
+// On phone-sized screens the basemap credit wraps onto two lines along the bottom, so the legend goes top right.
+const PHONE = window.matchMedia('(max-width: 600px)').matches;
+const stateLegend = L.control({position: PHONE ? 'topright' : 'bottomleft'});
 stateLegend.onAdd = () => {
   const el = L.DomUtil.create('div', 'legend');
   L.DomEvent.disableClickPropagation(el);
@@ -715,11 +724,14 @@ stateLegend.onAdd = () => {
     box.addEventListener('change', () => showIfChecked(box.dataset.layer)));
   // Show/hide button: collapsing keeps the layer checkboxes as they are, it only frees up the map.
   const toggle = el.querySelector('.legend-toggle');
-  toggle.addEventListener('click', () => {
-    const collapsed = el.classList.toggle('collapsed');
+  const setCollapsed = collapsed => {
+    el.classList.toggle('collapsed', collapsed);
     toggle.setAttribute('aria-expanded', String(!collapsed));
     toggle.textContent = collapsed ? 'Show legend' : 'Hide legend';
-  });
+  };
+  toggle.addEventListener('click', () => setCollapsed(!el.classList.contains('collapsed')));
+  // On phone-sized screens the open legend covers most of the map, so start it collapsed there.
+  if (PHONE) setCollapsed(true);
   return el;
 };
 stateLegend.addTo(stateMap);
