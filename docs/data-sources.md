@@ -41,7 +41,7 @@ such restriction. HIFLD Open shut down in 2025, so the copy used here is a snaps
 `gasplan/report.py` matches companies across the two layers, since their names are spelled differently
 (e.g. electric "CITY OF TRINIDAD - (CO)" and gas "TRINIDAD, CITY OF"), then intersects each matched pair
 of territories with Turf.js. Matches: Xcel Energy, Black Hills (Black Hills Colorado Electric and Black
-Hills Energy gas share a parent company), and the cities of Colorado Springs, Trinidad, Fort Morgan and
+Hills Energy gas share a parent company, Black Hills Corporation), and the cities of Colorado Springs, Trinidad, Fort Morgan and
 Center. Areas are approximate because the shapes are simplified for faster loading.
 
 Where the data also lists another electric or gas utility over a same-utility area, that part is shown

@@ -109,8 +109,8 @@ TEMPLATE = """<!doctype html>
 <body>
 <header>
   <h1>Colorado utility service territories</h1>
-  <p>Where Xcel Energy (Public Service Co. of Colorado) provides electricity, gas, or both.
-     Orange and yellow areas get electricity and gas from the same utility. Pale, dashed areas are
+  <p>Electric and gas utility territories by ownership type.
+     Orange, pink and yellow areas get electricity and gas from the same utility. Pale, dashed areas are
      uncertain because the data also lists another utility there.
      Click a territory for details, and use the checkboxes in the legend to switch layers on or off.</p>
 </header>
@@ -179,17 +179,24 @@ function clipToColorado(fc) {
   return turf.featureCollection(features);
 }
 
-const ELECTRIC_COLORS = {xcel: '#2563eb', iou: '#93c5fd', muni: '#5eead4', coop: '#d9f99d'};
-const ELECTRIC_LABELS = {iou: 'Other investor-owned', muni: 'Municipal', coop: 'Cooperative'};
-const isXcelElectric = p => /XCEL/i.test(p.HOLDING_CO || '');
+// Electric utilities by ownership. A few out-of-state public power districts and the Navajo Tribal
+// Utility Authority cross the border in small slivers; they're grey and not in the legend.
+const ELECTRIC_TYPES = {
+  iou: {label: 'Investor-owned', color: '#2563eb', opacity: 0.35},
+  muni: {label: 'Municipal', color: '#2dd4bf', opacity: 0.45},
+  coop: {label: 'Cooperative', color: '#bef264', opacity: 0.45}
+};
+const OTHER_ELECTRIC = {label: 'Other public power (border area)', color: '#cbd5e1', opacity: 0.45};
 // About half the Colorado records have TYPE 'NOT AVAILABLE', so fall back to the utility's name.
 function electricType(p) {
   const t = (p.TYPE || '').toUpperCase(), name = (p.NAME || '').toUpperCase();
   if (t === 'INVESTOR OWNED') return 'iou';
   if (t === 'MUNICIPAL' || /^(CITY|TOWN) OF/.test(name)) return 'muni';
-  if (t === 'COOPERATIVE' || /COOP|ELEC ASSN|ELECTRIC ASSN/.test(name)) return 'coop';
+  // Carbon Power & Light is a Wyoming co-op whose name doesn't say so.
+  if (t === 'COOPERATIVE' || /COOP|ELEC ASSN|ELECTRIC ASSN|CARBON POWER/.test(name)) return 'coop';
   return 'other';
 }
+const electricStyle = p => ELECTRIC_TYPES[electricType(p)] || OTHER_ELECTRIC;
 // Keys that identify the same company in both datasets, whose names are spelled differently
 // (e.g. electric "CITY OF TRINIDAD - (CO)" vs gas "TRINIDAD, CITY OF").
 function electricCompanyKey(p) {
@@ -207,7 +214,10 @@ function gasCompanyKey(p) {
   const muni = name.match(/^(.+), (?:CITY|TOWN) OF$/) || name.match(/^(.+) MUNICIPAL GAS SYSTEM$/);
   return muni ? 'MUNI ' + muni[1].trim() : null;
 }
-const COMPANY_LABELS = {'XCEL': 'Xcel Energy', 'BLACK HILLS': 'Black Hills Energy (same parent company)'};
+// Black Hills Colorado Electric and Black Hills Energy (gas) are both owned by Black Hills Corporation.
+const COMPANY_LABELS = {'XCEL': 'Xcel Energy', 'BLACK HILLS': 'Black Hills Energy (Black Hills Corporation)'};
+const OVERLAP_COLORS = {XCEL: '#f97316', 'BLACK HILLS': '#db2777', MUNI: '#facc15'};
+const overlapColor = key => key.startsWith('MUNI ') ? OVERLAP_COLORS.MUNI : OVERLAP_COLORS[key];
 const companyLabel = key => COMPANY_LABELS[key] || 'City of ' + titleCase(key.replace(/^MUNI /, ''));
 
 const SQ_METERS_PER_SQ_MI = 2589988.11;
@@ -282,7 +292,14 @@ function sameUtilityAreas(electric, gas) {
 }
 
 const titleCase = s => (s || '').toLowerCase().replace(/\\b\\w/g, c => c.toUpperCase());
-const isXcelGas = p => /PUBLIC SERVICE CO/i.test(p.NAME || '') || /XCEL/i.test(p.HOLDINGCO || '');
+// Gas utilities by ownership: investor-owned and private utilities are regulated by the Colorado PUC;
+// municipal ones are run by their city.
+const GAS_TYPES = {
+  'INVESTOR-OWNED': {label: 'Investor-owned', color: '#7c3aed'},
+  'MUNICIPAL': {label: 'Municipal', color: '#0d9488'},
+  'PRIVATE': {label: 'Private', color: '#92400e'}
+};
+const gasType = p => GAS_TYPES[(p.TYPE || '').toUpperCase()] || {label: titleCase(p.TYPE) || 'Not reported', color: '#6b7280'};
 const fmt = n => (n == null ? 'n/a' : Number(n).toLocaleString());
 
 // Esri basemap tiles work when the page is opened straight from a file
@@ -307,33 +324,34 @@ addBasemap(stateMap, 'Electric: HIFLD/ORNL | Gas: Colorado GeoData');
 const electricLayer = L.geoJSON(null, {
   style: f => ({
     color: '#475569', weight: 0.6,
-    fillColor: isXcelElectric(f.properties) ? ELECTRIC_COLORS.xcel : (ELECTRIC_COLORS[electricType(f.properties)] || '#e2e8f0'),
-    fillOpacity: isXcelElectric(f.properties) ? 0.35 : 0.45
+    fillColor: electricStyle(f.properties).color,
+    fillOpacity: electricStyle(f.properties).opacity
   }),
   onEachFeature: (f, layer) => {
     const p = f.properties;
     layer.bindPopup(`<div class="popup"><h3>${titleCase(p.NAME)}</h3><table>
       <tr><td>Service</td><td>Electric</td></tr>
-      <tr><td>Type</td><td>${isXcelElectric(p) ? 'Investor-owned (Xcel Energy)' : (ELECTRIC_LABELS[electricType(p)] || 'Not reported')}</td></tr>
+      <tr><td>Ownership</td><td>${electricStyle(p).label}</td></tr>
       <tr><td>Customers</td><td>${p.CUSTOMERS > 0 ? fmt(p.CUSTOMERS) : 'not reported'}</td></tr></table></div>`);
   }
 });
 const gasLayer = L.geoJSON(null, {
-  style: f => isXcelGas(f.properties)
-    ? {color: '#7c3aed', weight: 2.5, dashArray: '6 4', fillColor: '#7c3aed', fillOpacity: 0.12}
-    : {color: '#6b7280', weight: 1.5, dashArray: '4 4', fillColor: '#6b7280', fillOpacity: 0.08},
+  style: f => {
+    const c = gasType(f.properties).color;
+    return {color: c, weight: 2.5, dashArray: '6 4', fillColor: c, fillOpacity: 0.1};
+  },
   onEachFeature: (f, layer) => {
     const p = f.properties;
-    layer.bindPopup(`<div class="popup"><h3>${p.NAME}</h3><table>
+    layer.bindPopup(`<div class="popup"><h3>${titleCase(p.NAME)}</h3><table>
       <tr><td>Service</td><td>Gas</td></tr>
-      <tr><td>Type</td><td>${p.TYPE}${isXcelGas(p) ? ' (Xcel Energy)' : ''}</td></tr>
+      <tr><td>Ownership</td><td>${gasType(p).label}</td></tr>
       <tr><td>Total customers</td><td>${p.TOTAL_CUST ? fmt(p.TOTAL_CUST) : 'not reported'}</td></tr></table></div>`);
   }
 });
 
 const sameUtilityLayer = L.geoJSON(null, {
   style: f => {
-    const fill = f.properties.key === 'XCEL' ? '#f97316' : '#facc15';
+    const fill = overlapColor(f.properties.key);
     return f.properties.contested
       ? {color: '#9a3412', weight: 1.5, dashArray: '3 3', fillColor: fill, fillOpacity: 0.2}
       : {color: '#9a3412', weight: 1.5, fillColor: fill, fillOpacity: 0.65};
@@ -402,14 +420,15 @@ stateLegend.onAdd = () => {
     <label class="toggle"><input type="checkbox" data-layer="${name}" autocomplete="off" checked><span>${title}</span></label>${rows}</div>`;
   el.innerHTML =
     group('electric', 'Electric Utilities',
-      `<div class="row">${sw(ELECTRIC_COLORS.xcel, 'opacity:.6')}Xcel Energy</div>` +
-      Object.entries(ELECTRIC_LABELS).map(([k, v]) => `<div class="row">${sw(ELECTRIC_COLORS[k])}${v}</div>`).join('')) +
+      Object.values(ELECTRIC_TYPES).map(t =>
+        `<div class="row">${sw(t.color, 'opacity:' + Math.min(1, t.opacity + 0.25))}${t.label}</div>`).join('')) +
     group('gas', 'Gas Utilities',
-      `<div class="row">${sw('transparent', 'border:2px dashed #7c3aed')}Xcel Energy</div>` +
-      `<div class="row">${sw('transparent', 'border:2px dashed #6b7280')}Other gas utility</div>`) +
+      Object.values(GAS_TYPES).map(t =>
+        `<div class="row">${sw('transparent', 'border:2px dashed ' + t.color)}${t.label}</div>`).join('')) +
     group('same', 'Overlapping Service Areas',
-      `<div class="row">${sw('#f97316')}Xcel Energy</div>` +
-      `<div class="row">${sw('#facc15')}Other utility</div>` +
+      `<div class="row">${sw(OVERLAP_COLORS.XCEL)}Xcel Energy</div>` +
+      `<div class="row">${sw(OVERLAP_COLORS['BLACK HILLS'])}Black Hills Energy (Black Hills Corporation)</div>` +
+      `<div class="row">${sw(OVERLAP_COLORS.MUNI)}Municipal utilities</div>` +
       `<div class="row">${sw('rgba(249,115,22,.2)', 'border:1.5px dashed #9a3412')}Uncertain, overlapping utility boundaries</div>`);
   el.querySelectorAll('input[data-layer]').forEach(box =>
     box.addEventListener('change', () => showIfChecked(box.dataset.layer)));
