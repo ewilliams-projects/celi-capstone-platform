@@ -105,7 +105,8 @@ TEMPLATE = """<!doctype html>
 <header>
   <h1>Colorado utility service territories</h1>
   <p>Where Xcel Energy (Public Service Co. of Colorado) provides electricity, gas, or both.
-     Orange and yellow areas get electricity and gas from the same utility.
+     Orange and yellow areas get electricity and gas from the same utility. Pale, dashed areas are
+     uncertain because the data also lists another utility there.
      Click a territory for details, and use the layer control to switch layers on or off.</p>
 </header>
 <div class="note">Loaded live. Electric:
@@ -204,18 +205,68 @@ function gasCompanyKey(p) {
 const COMPANY_LABELS = {'XCEL': 'Xcel Energy', 'BLACK HILLS': 'Black Hills Energy (same parent company)'};
 const companyLabel = key => COMPANY_LABELS[key] || 'City of ' + titleCase(key.replace(/^MUNI /, ''));
 
-// Intersect each electric territory with each gas territory run by the same company.
+const SQ_METERS_PER_SQ_MI = 2589988.11;
+const bboxesTouch = (a, b) => a[0] <= b[2] && b[0] <= a[2] && a[1] <= b[3] && b[1] <= a[3];
+const polygonsOf = f => (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates)
+  .map(rings => turf.polygon(rings));
+
+// Intersect each electric territory with each gas territory run by the same company. Where the
+// data also puts another electric or gas utility over that area (e.g. Holy Cross and Xcel both
+// claim Silt), the area is split off and marked contested, because we can't tell who serves it.
+// City-owned utilities are exempt: they serve their own city, and the source data draws co-op and
+// other territories straight over towns without cutting them out.
 function sameUtilityAreas(electric, gas) {
   const out = [];
+  const others = [
+    ...electric.features.map(f => ({f, service: 'electric', key: electricCompanyKey(f.properties)})),
+    ...gas.features.map(f => ({f, service: 'gas', key: gasCompanyKey(f.properties)}))
+  ].map(o => Object.assign(o, {bb: turf.bbox(o.f), name: titleCase(o.f.properties.NAME)}));
+
   electric.features.forEach(e => {
     const key = electricCompanyKey(e.properties);
     if (!key) return;
     gas.features.filter(g => gasCompanyKey(g.properties) === key).forEach(g => {
       try {
         const overlap = turf.intersect(turf.featureCollection([e, g]));
-        if (overlap) {
-          overlap.properties = {key, sqmi: turf.area(overlap) / 2589988.11};
+        if (!overlap) return;
+        const bb = turf.bbox(overlap);
+        if (key.startsWith('MUNI ')) {
+          overlap.properties = {key, contested: false, sqmi: turf.area(overlap) / SQ_METERS_PER_SQ_MI};
           out.push(overlap);
+          return;
+        }
+        const claims = others
+          .filter(o => o.key !== key && bboxesTouch(bb, o.bb))
+          .map(o => Object.assign({}, o, {piece: turf.intersect(turf.featureCollection([overlap, o.f]))}))
+          .filter(o => o.piece && turf.area(o.piece) > 1);
+        const contested = claims.length > 1
+          ? turf.union(turf.featureCollection(claims.map(c => c.piece)))
+          : (claims[0] || {}).piece;
+        const clear = contested ? turf.difference(turf.featureCollection([overlap, contested])) : overlap;
+        if (clear) {
+          clear.properties = {key, contested: false, sqmi: turf.area(clear) / SQ_METERS_PER_SQ_MI};
+          out.push(clear);
+        }
+        if (contested) {
+          // Label each separate contested patch with the utilities that cover a real share of it
+          // (at least 10% of the patch, or 1 sq mi), not every one that grazes its edge.
+          polygonsOf(contested).forEach(patch => {
+            const pb = turf.bbox(patch), patchArea = turf.area(patch);
+            const shares = claims
+              .filter(c => bboxesTouch(pb, turf.bbox(c.piece)))
+              .map(c => {
+                const shared = turf.intersect(turf.featureCollection([patch, c.piece]));
+                return {c, a: shared ? turf.area(shared) : 0};
+              })
+              .filter(x => x.a > 0)
+              .sort((x, y) => y.a - x.a);
+            const big = shares.filter(x => x.a >= 0.1 * patchArea || x.a >= SQ_METERS_PER_SQ_MI);
+            patch.properties = {
+              key, contested: true, sqmi: patchArea / SQ_METERS_PER_SQ_MI,
+              claims: [...new Set((big.length ? big : shares.slice(0, 1)).map(x => `${x.c.name} (${x.c.service})`))]
+            };
+            if (patch.properties.sqmi > 0.01) out.push(patch);
+          });
         }
       } catch (err) {
         console.warn('Could not intersect', key, err);
@@ -277,15 +328,23 @@ const gasLayer = L.geoJSON(null, {
 });
 
 const sameUtilityLayer = L.geoJSON(null, {
-  style: f => ({
-    color: '#9a3412', weight: 1.5,
-    fillColor: f.properties.key === 'XCEL' ? '#f97316' : '#facc15', fillOpacity: 0.65
-  }),
+  style: f => {
+    const fill = f.properties.key === 'XCEL' ? '#f97316' : '#facc15';
+    return f.properties.contested
+      ? {color: '#9a3412', weight: 1.5, dashArray: '3 3', fillColor: fill, fillOpacity: 0.2}
+      : {color: '#9a3412', weight: 1.5, fillColor: fill, fillOpacity: 0.65};
+  },
   onEachFeature: (f, layer) => {
     const p = f.properties;
-    layer.bindPopup(`<div class="popup"><h3>${companyLabel(p.key)}</h3><table>
-      <tr><td>Service</td><td>Electric and gas from the same utility</td></tr>
-      <tr><td>Area</td><td>${fmt(Math.round(p.sqmi))} sq mi</td></tr></table></div>`);
+    const area = Math.round(p.sqmi) ? fmt(Math.round(p.sqmi)) + ' sq mi' : 'under 1 sq mi';
+    layer.bindPopup(p.contested
+      ? `<div class="popup"><h3>${companyLabel(p.key)}?</h3><table>
+          <tr><td>Status</td><td>Uncertain: the data also lists ${p.claims.join(', ')} here</td></tr>
+          <tr><td>Area</td><td>${area}</td></tr></table>
+          <p style="margin:6px 0 0;color:var(--muted)">Check the utilities' own maps or the Colorado PUC to see who serves this area.</p></div>`
+      : `<div class="popup"><h3>${companyLabel(p.key)}</h3><table>
+          <tr><td>Service</td><td>Electric and gas from the same utility</td></tr>
+          <tr><td>Area</td><td>${area}</td></tr></table></div>`);
   }
 });
 
@@ -321,7 +380,8 @@ stateLegend.onAdd = () => {
     `<div class="row">${sw('transparent', 'border:2px dashed #6b7280')}Other gas utility</div>` +
     '<b style="display:block;margin-top:6px">Same utility for both</b>' +
     `<div class="row">${sw('#f97316')}Xcel Energy</div>` +
-    `<div class="row">${sw('#facc15')}Other utility</div>`;
+    `<div class="row">${sw('#facc15')}Other utility</div>` +
+    `<div class="row">${sw('rgba(249,115,22,.2)', 'border:1.5px dashed #9a3412')}Uncertain, overlapping utility boundaries</div>`;
   return el;
 };
 stateLegend.addTo(stateMap);

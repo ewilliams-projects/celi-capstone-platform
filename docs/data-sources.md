@@ -44,6 +44,14 @@ of territories with Turf.js. Matches: Xcel Energy, Black Hills (Black Hills Colo
 Hills Energy gas share a parent company), and the cities of Colorado Springs, Trinidad, Fort Morgan and
 Center. Areas are approximate because the shapes are simplified for faster loading.
 
+Where the data also lists another electric or gas utility over a same-utility area, that part is shown
+as **uncertain** (pale, dashed outline) and its popup names the other utility. For example, the electric
+data puts both Xcel and Holy Cross Energy over Silt; Holy Cross is reported to serve Silt, with Xcel
+supplying Holy Cross wholesale. About 1,640 of Xcel's ~7,100 sq mi same-utility area is uncertain,
+mostly where Poudre Valley REA, United Power, Mountain Parks Electric or Estes Park overlap it.
+City-owned utilities (Colorado Springs, Trinidad, Fort Morgan, Center) are exempt, because the source
+data draws co-op territories straight over towns.
+
 ## Map cleanup and known data problems
 
 The statewide map leaves out WAPA (Western Area Power Administration) and Deseret Generation &
