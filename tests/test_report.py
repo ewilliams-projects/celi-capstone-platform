@@ -20,7 +20,13 @@ class ReportTests(unittest.TestCase):
         self.assertIn('id="statemap"', html)
         self.assertIn('id="pilotmap"', html)
         self.assertNotIn('id="map"', html)
-        self.assertNotIn("neighborhood priorities", html)
+        self.assertNotIn("NEIGHBORHOODS", html)
+        self.assertNotIn("Sample data", html)
+        self.assertNotIn("Sample A", html)
+        # Page structure and required credits
+        self.assertEqual(html.count("<main"), 1)
+        self.assertIn("Esri, HERE, Garmin, &copy; OpenStreetMap contributors", html)
+        self.assertIn('integrity="sha384-', html)
         self.assertNotIn("__", html.replace("__proto__", ""))  # no unfilled placeholders
 
     def test_draft_page_keeps_the_neighborhood_map(self):

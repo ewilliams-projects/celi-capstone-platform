@@ -24,7 +24,10 @@ with who holds the data and how to get it. The prototype runs today on sample va
 - [PUC Gas Planning Pilot Program](https://puc.colorado.gov/gas-planning-pilot-program): neighborhood-scale
   alternatives to gas pipe replacement under HB 24-1370. The PUC approved five pilot communities in Decision
   C25-0482 (June 2025): Boulder, Denver, Golden, Winter Park and Breckenridge, all partnering with Xcel. First
-  projects (or an explanation) are due June 1, 2027. The pilot map uses Census TIGERweb city limits for these five, and faint
+  projects (or an explanation) are due June 1, 2027. Xcel's June 1, 2026 status report (proceeding 25M-0269G) lists 16
+  potential projects: 7 in Breckenridge, 3 in Winter Park, and 2 each in Denver, Golden and Boulder
+  ([Colorado Energy Office](https://energyoffice.colorado.gov/gas-planning-pilot-communities)). The law covers local
+  governments in Xcel's natural gas service territory, which is why Winter Park qualifies. The pilot map uses Census TIGERweb city limits for these five, and faint
   TIGERweb primary and secondary roads (no basemap place names, so labels aren't doubled).
   In Winter Park, Xcel provides gas but Mountain Parks Electric provides electricity.
 
@@ -51,8 +54,9 @@ Center. Areas are approximate because the shapes are simplified for faster loadi
 
 Where the data also lists another electric or gas utility over a same-utility area, that part is shown
 as **uncertain** (pale, dashed outline) and its popup names the other utility. For example, the electric
-data puts both Xcel and Holy Cross Energy over Silt; Holy Cross is reported to serve Silt, with Xcel
-supplying Holy Cross wholesale. About 1,640 of Xcel's ~7,100 sq mi same-utility area is uncertain,
+data puts both Xcel and Holy Cross Energy over Silt; Holy Cross is reported to serve Silt (for example,
+[KMTS, 2015](https://www.kmts.com/news/holy-cross-energy-outage-affects-nearly-200-consumers-and-kmts)), with Xcel
+supplying Holy Cross wholesale ([Holy Cross Energy](https://www.holycross.com/wp-content/uploads/2018/06/HCE_CO2_2015-1.pdf)). About 1,640 of Xcel's ~7,100 sq mi same-utility area is uncertain,
 mostly where Poudre Valley REA, United Power, Mountain Parks Electric or Estes Park overlap it.
 City-owned utilities (Colorado Springs, Trinidad, Fort Morgan, Center) are exempt, because the source
 data draws co-op territories straight over towns.
@@ -72,3 +76,11 @@ Some overlaps between electric territories remain in the source data and aren't 
 - Xcel overlaps neighboring co-ops in places (about 1,600 sq mi with Poudre Valley REA; about 210 sq mi
   with Grand Valley Power). Some service areas really are interleaved more finely than this data shows.
 For exact service territories, use the Colorado PUC's certificated territory maps.
+
+## Basemap terms
+
+The site uses Esri's World Light Gray Canvas tiles without an API key, with Esri's required credit ("Esri, HERE,
+Garmin, © OpenStreetMap contributors, and the GIS user community"). Esri lists this service as in mature support,
+and its terms likely expect an ArcGIS account (free tier) for public websites, especially if the site is used for
+commercial purposes such as a business pitch. Planned: get a free ArcGIS Location Platform key restricted to the
+site's address, or switch to a provider whose terms explicitly allow keyless use.

@@ -9,8 +9,8 @@ Built for a CELI capstone (business pitch). The first target customer is a local
 such as the City and County of Denver, selecting projects for the
 [PUC Gas Planning Pilot Program](https://puc.colorado.gov/gas-planning-pilot-program).
 
-> **Note:** `data/sample/neighborhoods.csv` holds made-up values for demonstration. They are not real Denver data,
-> which is why the neighborhood map is kept off the published site for now.
+> **Note:** `data/sample/neighborhoods.csv` holds made-up values for demonstration, labeled "Sample A" to "Sample T".
+> They are not real neighborhood data, which is why the neighborhood map is kept off the published site for now.
 
 ## Run it
 
@@ -41,6 +41,21 @@ To use your own data, make a CSV with the same columns as the sample and run
 `.github/workflows/pages.yml` publishes `site/index.html` to GitHub Pages on every push to `main`:
 it runs the tests, runs `run.py`, and deploys the `site/` folder. One-time setup on GitHub:
 **Settings > Pages > Build and deployment > Source: GitHub Actions**.
+
+## License and data
+
+The code is under the [MIT License](LICENSE). The map data and basemap are not covered by it; they come from
+third parties and keep their own terms:
+
+- Electric territories: HIFLD / Oak Ridge National Laboratory (public use), via the National Broadband Availability Map
+- Gas territories: Colorado GeoData (State of Colorado, provided without warranty)
+- Counties, city limits and roads: U.S. Census Bureau TIGERweb (public domain)
+- Pilot communities: Colorado PUC and Colorado Energy Office
+- Basemap: Esri, HERE, Garmin, © OpenStreetMap contributors, and the GIS user community
+
+The site loads this data live, so it shows each source's last-update date. Territories are approximate and
+are not official service territory maps; see the "Known data limitations" section on the site and
+`docs/data-sources.md`.
 
 ## Run the tests
 

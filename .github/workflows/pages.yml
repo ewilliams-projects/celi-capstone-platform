@@ -28,6 +28,12 @@ jobs:
         run: python -m unittest
       - name: Build site
         run: python run.py
+      - name: Check that no draft content is published
+        run: |
+          if grep -nE 'NEIGHBORHOODS|Sample data|Sample [A-T]\b|rankings|id="map"' site/index.html; then
+            echo "::error::Draft neighborhood content found in site/index.html"
+            exit 1
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

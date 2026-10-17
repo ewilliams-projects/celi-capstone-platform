@@ -85,21 +85,25 @@ TEMPLATE = """<!doctype html>
 <title>Targeted Analytics for Equitable Gas Decommissioning</title>
 <meta name="description" content="Maps of Colorado's electric and gas utility territories and the Gas Planning Pilot Program communities, to help plan an equitable transition away from aging gas infrastructure.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236250d6'/%3E%3Cpath d='M18 5 9 18h6l-2 9 10-14h-6z' fill='%23fff'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@turf/turf@7.1.0/turf.min.js"></script>
+<!-- Pinned versions with integrity hashes: the browser refuses any copy that doesn't match exactly. -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@7.1.0/turf.min.js"
+        integrity="sha384-V2sTNoSKrI8N2u8kNbpZ2kJh54vI+OABRWz1t5/4m+fJuVeIoIkmILoRhQ/XRqrS" crossorigin="anonymous"></script>
 <style>
   :root { --ink:#1d2433; --muted:#5b6475; --line:#e3e6ec; --bg:#fafbfc; --accent:#b4441f; }
   * { box-sizing: border-box; }
   body { margin:0; font:14px/1.45 -apple-system, system-ui, sans-serif; color:var(--ink); background:var(--bg); }
-  header { padding:16px 20px 8px; }
+  .section-intro { padding:16px 20px 8px; }
   .page-header { padding:24px 20px 16px; background:#fff; border-bottom:1px solid var(--line); }
   .page-header h1 { margin:0; font-size:26px; line-height:1.2; letter-spacing:-.01em; }
   .page-header .lede { margin:8px 0 0; max-width:75ch; font-size:15px; line-height:1.55; color:#3d3d3a; }
   h2 { margin:0; font-size:20px; }
-  header p { margin:4px 0 0; color:var(--muted); }
+  .section-intro p { margin:4px 0 0; color:var(--muted); max-width:95ch; }
   .banner { margin:8px 20px 0; padding:8px 12px; background:#fff4d6; border:1px solid #f0d58a; border-radius:6px; }
-  main { display:grid; grid-template-columns: 1fr 420px; gap:16px; padding:16px 20px 20px; }
+  .neighborhood-grid { display:grid; grid-template-columns: 1fr 420px; gap:16px; padding:16px 20px 20px; }
   #map { height:calc(100vh - 140px); min-height:420px; border-radius:8px; border:1px solid var(--line); }
   .panel { background:#fff; border:1px solid var(--line); border-radius:8px; overflow:auto; max-height:calc(100vh - 140px); }
   table { width:100%; border-collapse:collapse; }
@@ -114,10 +118,15 @@ TEMPLATE = """<!doctype html>
   .legend .ends { display:flex; justify-content:space-between; color:var(--muted); }
   .popup h3 { margin:0 0 4px; font-size:15px; }
   .popup table td { padding:2px 6px 2px 0; border:none; }
-  .note { margin:4px 20px 0; color:var(--muted); font-size:12px; }
+  .note { margin:4px 20px 0; color:var(--muted); font-size:12px; max-width:110ch; }
+  .map-text { margin:4px 20px 8px; font-size:13px; color:#3d3d3a; max-width:95ch; }
+  .map-text summary { cursor:pointer; font-weight:600; color:var(--ink); padding:4px 0; }
+  .map-text ul { margin:6px 0 4px; padding-left:20px; }
+  .map-text li { margin-bottom:4px; }
+  .map-text p { margin:4px 0; }
   .note a { color:inherit; }
   #state-status { color:var(--accent); }
-  section.state { padding:12px 20px 8px; }
+  .state { padding:12px 20px 8px; }
   #statemap { height:560px; border-radius:8px; border:1px solid var(--line); }
   #pilotmap { height:440px; border-radius:8px; border:1px solid var(--line); }
   .pilot-label span { position:absolute; transform:translate(-50%, -50%); font-size:12px; font-weight:700;
@@ -128,12 +137,11 @@ TEMPLATE = """<!doctype html>
   .legend .row { margin-top:4px; display:flex; align-items:center; color:#2b2b29; }
   .legend .toggle { display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; }
   .legend .group + .group { margin-top:10px; }
-  .legend-toggle { all:unset; box-sizing:border-box; display:flex; align-items:center; justify-content:space-between;
-                   gap:16px; width:100%; cursor:pointer; font-size:12px; }
-  .legend-toggle .legend-title { font-weight:700; font-size:13px; color:#0b0b0b; }
-  .legend-toggle .legend-action { color:#1c5cab; font-weight:600; padding:2px 8px; border-radius:4px; }
-  .legend-toggle:hover .legend-action { background:#e6f1fb; }
-  .legend-toggle:focus-visible { outline:2px solid #1c5cab; outline-offset:3px; border-radius:4px; }
+  .legend-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .legend-title { font-weight:700; font-size:13px; color:#0b0b0b; }
+  .legend-toggle { all:unset; cursor:pointer; font-size:12px; color:#1c5cab; font-weight:600; padding:2px 8px; border-radius:4px; }
+  .legend-toggle:hover { background:#e6f1fb; }
+  .legend-toggle:focus-visible { outline:2px solid #1c5cab; outline-offset:2px; }
   .legend-body { margin-top:8px; padding-top:8px; border-top:1px solid var(--line); }
   .site-footer { margin:24px 20px 32px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted);
                  font-size:12px; line-height:1.55; max-width:90ch; }
@@ -146,13 +154,13 @@ TEMPLATE = """<!doctype html>
   .legend .toggle input:disabled + span { color:var(--muted); }
   .legend .group.off .row { opacity:.4; }
   @media (max-width: 860px) {
-    main { grid-template-columns: 1fr; padding:16px; }
+    .neighborhood-grid { grid-template-columns: 1fr; padding:16px; }
     #map { height:60vh; }
     #statemap { height:60vh; }
     #pilotmap { height:50vh; }
-    section.state { padding:12px 16px 8px; }
-    header, .note, .banner { margin-left:16px; margin-right:16px; }
-    header { padding-left:0; padding-right:0; }
+    .state { padding:12px 16px 8px; }
+    .section-intro, .note, .banner, .map-text { margin-left:16px; margin-right:16px; }
+    .section-intro { padding-left:0; padding-right:0; }
     .page-header { padding:18px 16px 12px; }
     .page-header h1 { font-size:22px; }
   }
@@ -171,72 +179,115 @@ TEMPLATE = """<!doctype html>
       <line x1="0" y1="0" x2="8" y2="0" stroke="#3d3d3a" stroke-width="1.2"/></pattern>
   </defs>
 </svg>
-<div class="page-header">
+<header class="page-header">
   <h1>Targeted Analytics for Equitable Gas Decommissioning</h1>
   <p class="lede">As households that can afford it switch to electric heat and appliances, fewer gas customers are
      left to pay for maintaining and replacing aging gas pipes. The customers who remain are often renters and
-     lower-income households, who already carry the highest energy burdens. This platform helps cities and
-     utilities find neighborhoods where planned, neighborhood-scale electrification can take the place of costly
-     pipe replacement, so the people least able to afford the transition aren't left paying for a shrinking gas system.
-     Where gas and electricity come from different utilities, the savings from retiring gas pipes don't automatically
-     flow to the electric upgrades that replace them, so those areas will need different policies and mechanisms to
-     make the change, and identifying them is just as important.</p>
-</div>
-<header>
-  <h2>Colorado utility service territories</h2>
-  <p>Electric and gas utility territories by ownership type.
-     Colors show ownership on both layers: electric territories are filled, gas territories are outlined.
-     Hatched areas get electricity and gas from the same utility; dashed outlines without hatching are
-     uncertain because the data also lists another utility there.
-     Click a territory for details, and use the checkboxes in the legend to switch layers on or off.</p>
+     lower-income households, who already carry the highest energy burdens. This project is building tools to help
+     cities and utilities find neighborhoods where planned, neighborhood-scale electrification can take the place of
+     costly pipe replacement, so the people least able to afford the transition aren't left paying for a shrinking gas
+     system. Where gas and electricity come from different utilities, the savings from retiring gas pipes don't
+     automatically flow to the electric upgrades that replace them, so those areas will need different policies and
+     mechanisms to make the change, and identifying them is just as important.</p>
 </header>
-<div class="note">Loaded live. Electric:
-  <a href="https://www.arcgis.com/home/item.html?id=597555ce8e4a4892a030784a7c657fdd" target="_blank" rel="noopener">Electric Retail Service Territories</a>
-  (federal HIFLD data from Oak Ridge National Laboratory, 2023; public use). Gas:
-  <a href="https://geodata.colorado.gov/datasets/47935f56eddd4d1781328c60c8517c96_0/explore" target="_blank" rel="noopener">Gas Utility Service Territories</a>
-  (Colorado GeoData). Counties:
-  <a href="https://tigerweb.geo.census.gov/" target="_blank" rel="noopener">U.S. Census Bureau TIGERweb</a> (public domain).
-  <span id="state-status"></span></div>
-<section class="state"><div id="statemap"></div></section>
+<main id="content">
+<section aria-labelledby="utility-title">
+  <div class="section-intro">
+    <h2 id="utility-title">Colorado utility service territories</h2>
+    <p>Electric and gas utility territories by ownership type.
+       Colors show ownership on both layers: electric territories are filled, gas territories are outlined.
+       Hatched areas get electricity and gas from the same utility (for Black Hills, from two companies with the same
+       parent); dashed outlines without hatching are uncertain because the data also lists another utility there.
+       Click a territory for details, and use the checkboxes in the legend to switch layers on or off.</p>
+  </div>
+  <p class="note">Map data loads live from its sources, so it can change between visits.
+    Electric: <a href="https://www.arcgis.com/home/item.html?id=597555ce8e4a4892a030784a7c657fdd" target="_blank" rel="noopener">Electric Retail Service Territories</a>,
+    federal HIFLD data from Oak Ridge National Laboratory (utility data from 2023), from a copy kept by the National
+    Broadband Availability Map after HIFLD Open closed; last updated <span data-edited="electric">August 21, 2025</span>.
+    Gas: <a href="https://geodata.colorado.gov/datasets/47935f56eddd4d1781328c60c8517c96_0/explore" target="_blank" rel="noopener">Gas Utility Service Territories</a>,
+    Colorado GeoData (State of Colorado, provided without warranty); last updated <span data-edited="gas">June 4, 2026</span>.
+    Counties: <a href="https://tigerweb.geo.census.gov/" target="_blank" rel="noopener">U.S. Census Bureau TIGERweb</a> (public domain).
+    <span id="state-status" role="status"></span></p>
+  <div class="state"><div id="statemap" role="region"
+    aria-label="Interactive map of Colorado electric and gas utility territories by ownership type. A text summary follows the map."></div></div>
+  <details class="map-text">
+    <summary>Text summary of the map</summary>
+    <p>Areas where one utility (or, for Black Hills, one parent company) provides both electricity and gas, in square
+       miles. "Uncertain" means the data also lists another electric or gas utility there.</p>
+    <ul id="overlap-summary"><li>Loading&hellip;</li></ul>
+  </details>
+  <details class="map-text">
+    <summary>Known data limitations</summary>
+    <ul>
+      <li>Territories are approximate and are not official service territory maps. The utilities' own maps and the
+          Colorado PUC's certificated territory maps are authoritative.</li>
+      <li>Some territories overlap in the source data. For example, the Town of Oak Creek's electric territory is drawn
+          over roughly 2,300 square miles of Yampa Valley Electric's area, co-ops based in New Mexico and Oklahoma extend
+          into southeast Colorado, and Xcel overlaps neighboring co-ops in places. Overlapping service areas that
+          another utility also claims are shown as uncertain.</li>
+      <li>The Western Area Power Administration (WAPA) and Deseret Generation &amp; Transmission are left out: they sell
+          wholesale power to utilities, not to homes, but the source data draws them across most of the state.</li>
+      <li>City-owned utilities (Colorado Springs, Trinidad, Fort Morgan and Center) are never marked uncertain, because
+          the source data draws co-op territories straight over towns.</li>
+      <li>Black Hills Colorado Electric and Black Hills Energy (gas) are separate companies with the same parent,
+          Black Hills Corporation, so savings don't move between them as directly as within one utility.</li>
+      <li>The gas and electric data come from different sources and years, so their borders don't line up exactly.</li>
+      <li>Shapes are simplified to about 50 meters for faster loading and cut at a rectangle that approximates
+          Colorado's border, so areas are approximate.</li>
+      <li>Customer counts in popups are for the whole utility, not for the area inside each shape.</li>
+    </ul>
+  </details>
+</section>
 
-<header>
-  <h2>Gas Planning Pilot Program communities</h2>
-  <p>Under House Bill 24-1370, Xcel Energy, Colorado's only utility that provides both gas and electricity to most
-     of its customers, partners with local communities to explore neighborhood-scale alternatives to replacing gas
-     pipes. The Colorado PUC approved five pilot communities in June 2025 (Decision C25-0482): Boulder, Denver and
-     Golden on the Front Range, and Winter Park and Breckenridge in the mountains. Xcel and the communities must file
-     their first projects, or explain why not, by June 1, 2027. Xcel provides both gas and electricity in four of the
-     five; in Winter Park, Xcel provides gas but Mountain Parks Electric, a co-op, provides electricity.</p>
-</header>
-<div class="note">Source: <a href="https://puc.colorado.gov/gas-planning-pilot-program" target="_blank" rel="noopener">Colorado PUC Gas Planning Pilot Program</a>.
-  City limits: U.S. Census Bureau TIGERweb (public domain). <span id="pilot-status"></span></div>
-<section class="state"><div id="pilotmap" role="img"
-  aria-label="Map of the five Gas Planning Pilot Program communities: Boulder, Denver, Golden and Breckenridge, where Xcel Energy provides both gas and electricity, and Winter Park, where Xcel provides gas and Mountain Parks Electric provides electricity."></div></section>
+<section aria-labelledby="pilot-title">
+  <div class="section-intro">
+    <h2 id="pilot-title">Gas Planning Pilot Program communities</h2>
+    <p>Under House Bill 24-1370, Xcel Energy, Colorado's only investor-owned utility that provides both gas and
+       electricity to most of its customers, partners with local governments in its gas service territory to explore
+       neighborhood-scale alternatives to replacing gas pipes. The Colorado PUC approved five pilot communities in
+       June 2025 (Decision C25-0482): Boulder, Denver and Golden on the Front Range, and Winter Park and Breckenridge
+       in the mountains. Xcel's June 2026 status report lists 16 potential projects: seven in Breckenridge, three in
+       Winter Park, and two each in Denver, Golden and Boulder. Xcel and the communities must file their first
+       projects, or explain why not, by June 1, 2027. Xcel provides both gas and electricity in four of the five; in
+       Winter Park, Xcel provides gas but Mountain Parks Electric, a co-op, provides electricity.</p>
+  </div>
+  <p class="note">Sources: <a href="https://puc.colorado.gov/gas-planning-pilot-program" target="_blank" rel="noopener">Colorado PUC Gas Planning Pilot Program</a>;
+    <a href="https://energyoffice.colorado.gov/gas-planning-pilot-communities" target="_blank" rel="noopener">Colorado Energy Office</a>.
+    City limits and roads: U.S. Census Bureau TIGERweb (public domain). <span id="pilot-status" role="status"></span></p>
+  <div class="state"><div id="pilotmap" role="region"
+    aria-label="Map of the five Gas Planning Pilot Program communities: Boulder, Denver, Golden and Breckenridge, where Xcel Energy provides both gas and electricity, and Winter Park, where Xcel provides gas and Mountain Parks Electric provides electricity."></div></div>
+</section>
 
 <!-- NEIGHBORHOODS: draft section, left out of the published site -->
-<header>
-  <h2>Where to plan neighborhood-scale electrification first</h2>
-  <p>Circles show each neighborhood's priority (darker = higher). Circle size shows the number of homes.
-     <span class="tag">Equity</span> marks neighborhoods with high renter and low-income shares.</p>
-</header>
-__BANNER__
-<main>
-  <div id="map"></div>
-  <div class="panel">
-    <table>
-      <thead><tr><th>#</th><th>Neighborhood</th><th class="num">Priority</th><th class="num">Avoided $ per $1</th></tr></thead>
-      <tbody id="rows"></tbody>
-    </table>
+<section aria-labelledby="neighborhood-title">
+  <div class="section-intro">
+    <h2 id="neighborhood-title">Where to plan neighborhood-scale electrification first</h2>
+    <p>Circles show each neighborhood's priority (darker = higher). Circle size shows the number of homes.
+       <span class="tag">Equity</span> marks neighborhoods with high renter and low-income shares.</p>
   </div>
-</main>
+  __BANNER__
+  <div class="neighborhood-grid">
+    <div id="map"></div>
+    <div class="panel">
+      <table>
+        <thead><tr><th>#</th><th>Neighborhood</th><th class="num">Priority</th><th class="num">Avoided $ per $1</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
 <!-- /NEIGHBORHOODS -->
+</main>
 <footer class="site-footer">
   <p><b>About this prototype.</b> Built for a CELI capstone. Utility territories are approximate, drawn from public
      data that sometimes overlaps or disagrees, and are not official service territory maps. Check with the
      utilities or the Colorado PUC before relying on them.</p>
   <p>Data: electric territories from HIFLD / Oak Ridge National Laboratory; gas territories from Colorado GeoData
      (State of Colorado, provided without warranty); county boundaries, city limits and roads from the U.S. Census
-     Bureau; pilot communities from the Colorado PUC. Basemap tiles &copy; Esri. Last updated __BUILT__.</p>
+     Bureau; pilot communities from the Colorado PUC and Colorado Energy Office. Basemap: Esri, HERE, Garmin,
+     &copy; OpenStreetMap contributors, and the GIS user community.</p>
+  <p>Page built __BUILT__. Map data loads live from its sources; each source's last-update date is shown above the map.
+     Code: MIT License. Data and basemap keep their own terms.</p>
 </footer>
 <script>
 // ---- Map 1: statewide electric and gas service territories ----
@@ -321,7 +372,7 @@ function electricCompanyKey(p) {
   const name = (p.NAME || '').toUpperCase();
   if (/XCEL/.test(p.HOLDING_CO || '')) return 'XCEL';
   if (/^BLACK HILLS COLORADO ELECTRIC/.test(name)) return 'BLACK HILLS';
-  const muni = name.match(/^(?:CITY|TOWN) OF ([A-Z .]+?)(?:\s*-?\s*\(CO\))?$/);
+  const muni = name.match(/^(?:CITY|TOWN) OF ([A-Z .]+?)(?:\\s*-?\\s*\\(CO\\))?$/);
   return muni ? 'MUNI ' + muni[1].trim() : null;
 }
 function gasCompanyKey(p) {
@@ -333,12 +384,13 @@ function gasCompanyKey(p) {
   return muni ? 'MUNI ' + muni[1].trim() : null;
 }
 // Black Hills Colorado Electric and Black Hills Energy (gas) are both owned by Black Hills Corporation.
-const COMPANY_LABELS = {'XCEL': 'Xcel Energy', 'BLACK HILLS': 'Black Hills Energy (Black Hills Corporation)'};
+// Black Hills Colorado Electric and Black Hills Energy (gas) are separate companies with one parent.
+const COMPANY_LABELS = {'XCEL': 'Xcel Energy', 'BLACK HILLS': 'Black Hills Corporation'};
 // Overlapping service areas are hatched in dark ink so the electric color shows through.
 // Hatch direction tells the utilities apart (patterns are defined in the <svg> at the top of <body>).
 const OVERLAP_PATTERNS = {
   XCEL: {label: 'Xcel Energy', pattern: 'hatch-45'},
-  'BLACK HILLS': {label: 'Black Hills Energy (Black Hills Corporation)', pattern: 'hatch-135'},
+  'BLACK HILLS': {label: 'Black Hills (separate electric and gas companies, same parent)', pattern: 'hatch-135'},
   MUNI: {label: 'Municipal utilities', pattern: 'hatch-cross'}
 };
 const overlapPattern = key => (key.startsWith('MUNI ') ? OVERLAP_PATTERNS.MUNI : OVERLAP_PATTERNS[key]).pattern;
@@ -416,6 +468,9 @@ function sameUtilityAreas(electric, gas) {
 }
 
 const titleCase = s => (s || '').toLowerCase().replace(/\\b\\w/g, c => c.toUpperCase());
+// Names and types come from third-party map services; escape them before putting them into the page.
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
+  c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 // Gas utilities by ownership: investor-owned and private utilities are regulated by the Colorado PUC;
 // municipal ones are run by their city.
 const GAS_TYPES = {
@@ -431,9 +486,11 @@ const fmt = n => (n == null ? 'n/a' : Number(n).toLocaleString());
 // Esri basemap tiles work when the page is opened straight from a file
 // (OpenStreetMap's servers block those requests). Labels go in their own pane above the data.
 const ESRI_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
+// Esri's required credit for these tiles; the data sources are credited in the notes and footer.
+const BASEMAP_CREDIT = 'Basemap: Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS user community';
 function addBasemap(m, extraAttribution, {placeNames = true} = {}) {
   L.tileLayer(ESRI_TILES + 'World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri' + (extraAttribution ? ' | ' + extraAttribution : ''), maxZoom: 16
+    attribution: BASEMAP_CREDIT + (extraAttribution ? ' | ' + extraAttribution : ''), maxZoom: 16
   }).addTo(m);
   // The base tiles have no place names, only faint roads and water; names come from a separate layer.
   if (!placeNames) return;
@@ -447,7 +504,7 @@ function addBasemap(m, extraAttribution, {placeNames = true} = {}) {
 
 const COLORADO_BOUNDS = [[COLORADO_BBOX[1], COLORADO_BBOX[0]], [COLORADO_BBOX[3], COLORADO_BBOX[2]]];
 const stateMap = L.map('statemap').fitBounds(COLORADO_BOUNDS);
-addBasemap(stateMap, 'Electric: HIFLD/ORNL | Gas: Colorado GeoData | Counties: U.S. Census Bureau');
+addBasemap(stateMap);
 // County lines sit in their own pane: above the utility layers so the 80% fills don't hide them,
 // below the basemap's place names, and never catching clicks meant for the territories.
 stateMap.createPane('counties');
@@ -476,10 +533,10 @@ const electricLayer = L.geoJSON(null, {
   }),
   onEachFeature: (f, layer) => {
     const p = f.properties;
-    layer.bindPopup(`<div class="popup"><h3>${titleCase(p.NAME)}</h3><table>
+    layer.bindPopup(`<div class="popup"><h3>${esc(titleCase(p.NAME))}</h3><table>
       <tr><td>Service</td><td>Electric</td></tr>
-      <tr><td>Ownership</td><td>${electricStyle(p).label}</td></tr>
-      <tr><td>Customers</td><td>${p.CUSTOMERS > 0 ? fmt(p.CUSTOMERS) : 'not reported'}</td></tr></table></div>`);
+      <tr><td>Ownership</td><td>${esc(electricStyle(p).label)}</td></tr>
+      <tr><td>Utility-wide customers (2023)</td><td>${p.CUSTOMERS > 0 ? fmt(p.CUSTOMERS) : 'not reported'}</td></tr></table></div>`);
   }
 });
 const gasLayer = L.geoJSON(null, {
@@ -491,10 +548,10 @@ const gasLayer = L.geoJSON(null, {
   },
   onEachFeature: (f, layer) => {
     const p = f.properties;
-    layer.bindPopup(`<div class="popup"><h3>${titleCase(p.NAME)}</h3><table>
+    layer.bindPopup(`<div class="popup"><h3>${esc(titleCase(p.NAME))}</h3><table>
       <tr><td>Service</td><td>Gas</td></tr>
-      <tr><td>Ownership</td><td>${gasType(p).label}</td></tr>
-      <tr><td>Total customers</td><td>${p.TOTAL_CUST ? fmt(p.TOTAL_CUST) : 'not reported'}</td></tr></table></div>`);
+      <tr><td>Ownership</td><td>${esc(gasType(p).label)}</td></tr>
+      <tr><td>Utility-wide customers</td><td>${p.TOTAL_CUST ? fmt(p.TOTAL_CUST) : 'not reported'}</td></tr></table></div>`);
   }
 });
 
@@ -515,12 +572,14 @@ const sameUtilityLayer = L.geoJSON(null, {
     const p = f.properties;
     const area = Math.round(p.sqmi) ? fmt(Math.round(p.sqmi)) + ' sq mi' : 'under 1 sq mi';
     layer.bindPopup(p.contested
-      ? `<div class="popup"><h3>${companyLabel(p.key)}?</h3><table>
-          <tr><td>Status</td><td>Uncertain: the data also lists ${p.claims.join(', ')} here</td></tr>
+      ? `<div class="popup"><h3>${esc(companyLabel(p.key))}?</h3><table>
+          <tr><td>Status</td><td>Uncertain: the data also lists ${p.claims.map(esc).join(', ')} here</td></tr>
           <tr><td>Area</td><td>${area}</td></tr></table>
           <p style="margin:6px 0 0;color:var(--muted)">Check the utilities' own maps or the Colorado PUC to see who serves this area.</p></div>`
-      : `<div class="popup"><h3>${companyLabel(p.key)}</h3><table>
-          <tr><td>Service</td><td>Electric and gas from the same utility</td></tr>
+      : `<div class="popup"><h3>${esc(companyLabel(p.key))}</h3><table>
+          <tr><td>Service</td><td>${p.key === 'BLACK HILLS'
+            ? 'Electric and gas from two companies with the same parent'
+            : 'Electric and gas from the same utility'}</td></tr>
           <tr><td>Area</td><td>${area}</td></tr></table></div>`);
   }
 });
@@ -534,7 +593,7 @@ fetch(geojsonQuery(COUNTY_URL, 'BASENAME', {where: "STATE='08'"}))
       const at = window.turf ? turf.pointOnFeature(f).geometry.coordinates : null;
       if (at) L.marker([at[1], at[0]], {
         pane: 'counties', interactive: false, keyboard: false,
-        icon: L.divIcon({className: 'county-label', html: `<span>${f.properties.BASENAME}</span>`, iconSize: [0, 0]})
+        icon: L.divIcon({className: 'county-label', html: `<span>${esc(f.properties.BASENAME)}</span>`, iconSize: [0, 0]})
       }).addTo(countyLabels);
     });
     showIfChecked('counties');
@@ -552,6 +611,7 @@ Promise.all([
     const sameAreas = sameUtilityAreas(electric, gas);
     sameUtilityLayer.addData(sameAreas);
     addPilotContext(sameAreas);
+    writeOverlapSummary(sameAreas);
   } else {
     status.textContent = 'Could not load the overlap tool, so the same-utility layer is hidden.';
     setLayerAvailable('same', false);
@@ -561,6 +621,35 @@ Promise.all([
 }).catch(() => {
   status.textContent = 'Could not load the utility layers. Check your internet connection and reload.';
 });
+
+// Show each source's real last-edit date (the page's static text is the date checked at build time).
+[['electric', ELECTRIC_URL], ['gas', GAS_URL]].forEach(([name, url]) => {
+  fetch(url.replace(/\\/query$/, '') + '?f=json')
+    .then(r => r.json())
+    .then(info => {
+      const edited = info.editingInfo && info.editingInfo.lastEditDate;
+      if (!edited) return;
+      document.querySelector(`[data-edited="${name}"]`).textContent =
+        new Date(edited).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'});
+    })
+    .catch(() => {});  // keep the date written into the page
+});
+
+// Text alternative for the statewide map: overlap area per utility, confirmed and uncertain.
+function writeOverlapSummary(sameAreas) {
+  const totals = {};
+  sameAreas.features.forEach(f => {
+    const label = companyLabel(f.properties.key);
+    totals[label] = totals[label] || {clear: 0, uncertain: 0};
+    totals[label][f.properties.contested ? 'uncertain' : 'clear'] += f.properties.sqmi;
+  });
+  const sq = n => Math.round(n) >= 1 ? fmt(Math.round(n)) : 'under 1';
+  document.getElementById('overlap-summary').innerHTML = Object.entries(totals)
+    .sort((a, b) => (b[1].clear + b[1].uncertain) - (a[1].clear + a[1].uncertain))
+    .map(([label, t]) => `<li>${esc(label)}: ${sq(t.clear)} sq mi` +
+      (t.uncertain >= 0.5 ? `, plus ${sq(t.uncertain)} sq mi uncertain` : '') + '</li>')
+    .join('');
+}
 
 // The legend doubles as the layer switcher: each section heading has a checkbox.
 const STATE_LAYERS = {electric: electricLayer, gas: gasLayer, same: sameUtilityLayer, counties: countyLayer};
@@ -606,8 +695,8 @@ stateLegend.onAdd = () => {
   const group = (name, title, rows, checked = true) => `<div class="group">
     <label class="toggle"><input type="checkbox" data-layer="${name}" autocomplete="off"${checked ? ' checked' : ''}><span>${title}</span></label>${rows}</div>`;
   el.innerHTML =
-    `<button type="button" class="legend-toggle" aria-label="Hide legend" aria-expanded="true" aria-controls="state-legend-body">
-       <span class="legend-title">Legend</span><span class="legend-action">Hide</span></button>` +
+    `<div class="legend-head"><span class="legend-title">Legend</span>
+       <button type="button" class="legend-toggle" aria-expanded="true" aria-controls="state-legend-body">Hide legend</button></div>` +
     `<div class="legend-body" id="state-legend-body">` +
     group('electric', 'Electric Utilities',
       Object.values(ELECTRIC_TYPES).map(t =>
@@ -629,8 +718,7 @@ stateLegend.onAdd = () => {
   toggle.addEventListener('click', () => {
     const collapsed = el.classList.toggle('collapsed');
     toggle.setAttribute('aria-expanded', String(!collapsed));
-    toggle.querySelector('.legend-action').textContent = collapsed ? 'Show' : 'Hide';
-    toggle.setAttribute('aria-label', collapsed ? 'Show legend' : 'Hide legend');
+    toggle.textContent = collapsed ? 'Show legend' : 'Hide legend';
   });
   return el;
 };
@@ -652,7 +740,7 @@ const pilotMap = L.map('pilotmap', {
 }).fitBounds([[39.40, -106.20], [40.10, -104.60]]);
 // No basemap place names here: the map labels the five communities itself, and the basemap's own
 // names doubled up with them (e.g. two "Denver" labels).
-addBasemap(pilotMap, 'Colorado PUC | U.S. Census Bureau (city limits, roads) | HIFLD/ORNL | Colorado GeoData', {placeNames: false});
+addBasemap(pilotMap, '', {placeNames: false});
 
 // Context: where Xcel provides both electricity and gas (the overlap computed for the statewide map).
 const pilotContext = L.geoJSON(null, {
@@ -699,7 +787,7 @@ fetch(geojsonQuery(PLACES_URL, 'BASENAME', {
       L.marker([c[1], c[0]], {
         interactive: false, keyboard: false,
         icon: L.divIcon({className: 'pilot-label', iconSize: [0, 0],
-          html: `<span style="margin-top:16px">${name}<small>${PILOT_COMMUNITIES[name]}</small></span>`})
+          html: `<span style="margin-top:16px">${esc(name)}<small>${esc(PILOT_COMMUNITIES[name])}</small></span>`})
       }).addTo(pilotMap);
     });
   })
