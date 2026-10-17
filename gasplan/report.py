@@ -91,6 +91,11 @@ TEMPLATE = """<!doctype html>
   #statemap { height:560px; border-radius:8px; border:1px solid var(--line); }
   .legend .swatch { display:inline-block; width:14px; height:10px; margin-right:6px; vertical-align:middle; border-radius:2px; }
   .legend .row { margin-top:3px; }
+  .legend .toggle { display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; }
+  .legend .group + .group { margin-top:10px; }
+  .legend .toggle input { margin:0; cursor:pointer; }
+  .legend .toggle input:disabled + span { color:var(--muted); }
+  .legend .group.off .row { opacity:.4; }
   @media (max-width: 860px) {
     main { grid-template-columns: 1fr; padding:16px; }
     #map { height:60vh; }
@@ -107,7 +112,7 @@ TEMPLATE = """<!doctype html>
   <p>Where Xcel Energy (Public Service Co. of Colorado) provides electricity, gas, or both.
      Orange and yellow areas get electricity and gas from the same utility. Pale, dashed areas are
      uncertain because the data also lists another utility there.
-     Click a territory for details, and use the layer control to switch layers on or off.</p>
+     Click a territory for details, and use the checkboxes in the legend to switch layers on or off.</p>
 </header>
 <div class="note">Loaded live. Electric:
   <a href="https://www.arcgis.com/home/item.html?id=597555ce8e4a4892a030784a7c657fdd" target="_blank" rel="noopener">Electric Retail Service Territories</a>
@@ -298,7 +303,6 @@ function addBasemap(m, extraAttribution) {
 const COLORADO_BOUNDS = [[COLORADO_BBOX[1], COLORADO_BBOX[0]], [COLORADO_BBOX[3], COLORADO_BBOX[2]]];
 const stateMap = L.map('statemap').fitBounds(COLORADO_BOUNDS);
 addBasemap(stateMap, 'Electric: HIFLD/ORNL | Gas: Colorado GeoData');
-const layerControl = L.control.layers(null, null, {collapsed: false}).addTo(stateMap);
 
 const electricLayer = L.geoJSON(null, {
   style: f => ({
@@ -354,34 +358,61 @@ Promise.all([
   fetch(geojsonQuery(GAS_URL, 'NAME,HOLDINGCO,TYPE,TOTAL_CUST')).then(r => r.json())
 ]).then(([electricRaw, gasRaw]) => {
   const electric = clipToColorado(electricRaw), gas = clipToColorado(gasRaw);
-  electricLayer.addData(electric).addTo(stateMap);
-  gasLayer.addData(gas).addTo(stateMap);
-  layerControl.addOverlay(electricLayer, 'Electric utilities (fill)');
-  layerControl.addOverlay(gasLayer, 'Gas utilities (dashed outline)');
+  electricLayer.addData(electric);
+  gasLayer.addData(gas);
   if (window.turf) {
-    sameUtilityLayer.addData(sameUtilityAreas(electric, gas)).addTo(stateMap);
-    layerControl.addOverlay(sameUtilityLayer, 'Same electric &amp; gas utility');
+    sameUtilityLayer.addData(sameUtilityAreas(electric, gas));
   } else {
     status.textContent = 'Could not load the overlap tool, so the same-utility layer is hidden.';
+    setLayerAvailable('same', false);
   }
+  // Add layers in drawing order (electric fill, gas outlines, same-utility on top), honoring the checkboxes.
+  ['electric', 'gas', 'same'].forEach(showIfChecked);
 }).catch(() => {
   status.textContent = 'Could not load the utility layers. Check your internet connection and reload.';
 });
 
+// The legend doubles as the layer switcher: each section heading has a checkbox.
+const STATE_LAYERS = {electric: electricLayer, gas: gasLayer, same: sameUtilityLayer};
+const layerToggle = name => document.querySelector(`.legend input[data-layer="${name}"]`);
+function showIfChecked(name) {
+  const box = layerToggle(name), layer = STATE_LAYERS[name];
+  const on = box && box.checked && !box.disabled;
+  if (on && layer.getLayers().length) {
+    layer.addTo(stateMap);
+    // Keep the same-utility areas drawn above the electric and gas layers.
+    if (stateMap.hasLayer(sameUtilityLayer)) sameUtilityLayer.bringToFront();
+  } else {
+    stateMap.removeLayer(layer);
+  }
+  if (box) box.closest('.group').classList.toggle('off', !on);
+}
+function setLayerAvailable(name, available) {
+  const box = layerToggle(name);
+  if (box) { box.disabled = !available; showIfChecked(name); }
+}
+
 const stateLegend = L.control({position: 'bottomleft'});
 stateLegend.onAdd = () => {
   const el = L.DomUtil.create('div', 'legend');
+  L.DomEvent.disableClickPropagation(el);
+  L.DomEvent.disableScrollPropagation(el);
   const sw = (c, extra) => `<span class="swatch" style="background:${c};${extra || ''}"></span>`;
-  el.innerHTML = '<b>Electric</b>' +
-    `<div class="row">${sw(ELECTRIC_COLORS.xcel, 'opacity:.6')}Xcel Energy</div>` +
-    Object.entries(ELECTRIC_LABELS).map(([k, v]) => `<div class="row">${sw(ELECTRIC_COLORS[k])}${v}</div>`).join('') +
-    '<b style="display:block;margin-top:6px">Gas</b>' +
-    `<div class="row">${sw('transparent', 'border:2px dashed #7c3aed')}Xcel Energy</div>` +
-    `<div class="row">${sw('transparent', 'border:2px dashed #6b7280')}Other gas utility</div>` +
-    '<b style="display:block;margin-top:6px">Same utility for both</b>' +
-    `<div class="row">${sw('#f97316')}Xcel Energy</div>` +
-    `<div class="row">${sw('#facc15')}Other utility</div>` +
-    `<div class="row">${sw('rgba(249,115,22,.2)', 'border:1.5px dashed #9a3412')}Uncertain, overlapping utility boundaries</div>`;
+  const group = (name, title, rows) => `<div class="group">
+    <label class="toggle"><input type="checkbox" data-layer="${name}" autocomplete="off" checked><span>${title}</span></label>${rows}</div>`;
+  el.innerHTML =
+    group('electric', 'Electric Utilities',
+      `<div class="row">${sw(ELECTRIC_COLORS.xcel, 'opacity:.6')}Xcel Energy</div>` +
+      Object.entries(ELECTRIC_LABELS).map(([k, v]) => `<div class="row">${sw(ELECTRIC_COLORS[k])}${v}</div>`).join('')) +
+    group('gas', 'Gas Utilities',
+      `<div class="row">${sw('transparent', 'border:2px dashed #7c3aed')}Xcel Energy</div>` +
+      `<div class="row">${sw('transparent', 'border:2px dashed #6b7280')}Other gas utility</div>`) +
+    group('same', 'Overlapping Service Areas',
+      `<div class="row">${sw('#f97316')}Xcel Energy</div>` +
+      `<div class="row">${sw('#facc15')}Other utility</div>` +
+      `<div class="row">${sw('rgba(249,115,22,.2)', 'border:1.5px dashed #9a3412')}Uncertain, overlapping utility boundaries</div>`);
+  el.querySelectorAll('input[data-layer]').forEach(box =>
+    box.addEventListener('change', () => showIfChecked(box.dataset.layer)));
   return el;
 };
 stateLegend.addTo(stateMap);
