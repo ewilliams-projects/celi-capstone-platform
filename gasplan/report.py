@@ -58,7 +58,7 @@ TEMPLATE = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gas Decommissioning Priorities</title>
+<title>Targeted Analytics for Equitable Gas Decommissioning</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7.1.0/turf.min.js"></script>
@@ -67,7 +67,10 @@ TEMPLATE = """<!doctype html>
   * { box-sizing: border-box; }
   body { margin:0; font:14px/1.45 -apple-system, system-ui, sans-serif; color:var(--ink); background:var(--bg); }
   header { padding:16px 20px 8px; }
-  h1 { margin:0; font-size:20px; }
+  .page-header { padding:24px 20px 16px; background:#fff; border-bottom:1px solid var(--line); }
+  .page-header h1 { margin:0; font-size:26px; line-height:1.2; letter-spacing:-.01em; }
+  .page-header .lede { margin:8px 0 0; max-width:75ch; font-size:15px; line-height:1.55; color:#3d3d3a; }
+  h2 { margin:0; font-size:20px; }
   header p { margin:4px 0 0; color:var(--muted); }
   .banner { margin:8px 20px 0; padding:8px 12px; background:#fff4d6; border:1px solid #f0d58a; border-radius:6px; }
   main { display:grid; grid-template-columns: 1fr 420px; gap:16px; padding:16px 20px 20px; }
@@ -90,6 +93,11 @@ TEMPLATE = """<!doctype html>
   #state-status { color:var(--accent); }
   section.state { padding:12px 20px 8px; }
   #statemap { height:560px; border-radius:8px; border:1px solid var(--line); }
+  #pilotmap { height:440px; border-radius:8px; border:1px solid var(--line); }
+  .pilot-label span { position:absolute; transform:translate(-50%, -50%); font-size:12px; font-weight:700;
+                      color:#26215c; white-space:nowrap; text-align:center; line-height:1.2;
+                      text-shadow:0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
+  .pilot-label small { display:block; font-size:10px; font-weight:600; color:#3d3d3a; }
   .legend .swatch { display:inline-block; width:24px; height:14px; margin-right:8px; vertical-align:middle; flex:none; }
   .legend .row { margin-top:4px; display:flex; align-items:center; color:#2b2b29; }
   .legend .toggle { display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; }
@@ -112,9 +120,12 @@ TEMPLATE = """<!doctype html>
     main { grid-template-columns: 1fr; padding:16px; }
     #map { height:60vh; }
     #statemap { height:60vh; }
+    #pilotmap { height:50vh; }
     section.state { padding:12px 16px 8px; }
     header, .note, .banner { margin-left:16px; margin-right:16px; }
     header { padding-left:0; padding-right:0; }
+    .page-header { padding:18px 16px 12px; }
+    .page-header h1 { font-size:22px; }
   }
 </style>
 </head>
@@ -131,8 +142,19 @@ TEMPLATE = """<!doctype html>
       <line x1="0" y1="0" x2="8" y2="0" stroke="#3d3d3a" stroke-width="1.2"/></pattern>
   </defs>
 </svg>
+<div class="page-header">
+  <h1>Targeted Analytics for Equitable Gas Decommissioning</h1>
+  <p class="lede">As households that can afford it switch to electric heat and appliances, fewer gas customers are
+     left to pay for maintaining and replacing aging gas pipes. The customers who remain are often renters and
+     lower-income households, who already carry the highest energy burdens. This platform helps cities and
+     utilities find neighborhoods where planned, neighborhood-scale electrification can take the place of costly
+     pipe replacement, so the people least able to afford the transition aren't left paying for a shrinking gas system.
+     Where gas and electricity come from different utilities, the savings from retiring gas pipes don't automatically
+     flow to the electric upgrades that replace them, so those areas will need different policies and mechanisms to
+     make the change, and identifying them is just as important.</p>
+</div>
 <header>
-  <h1>Colorado utility service territories</h1>
+  <h2>Colorado utility service territories</h2>
   <p>Electric and gas utility territories by ownership type.
      Colors show ownership on both layers: electric territories are filled, gas territories are outlined.
      Hatched areas get electricity and gas from the same utility; dashed outlines without hatching are
@@ -149,7 +171,21 @@ TEMPLATE = """<!doctype html>
 <section class="state"><div id="statemap"></div></section>
 
 <header>
-  <h1>Where to plan neighborhood-scale electrification first</h1>
+  <h2>Gas Planning Pilot Program communities</h2>
+  <p>Under House Bill 24-1370, Xcel Energy, Colorado's only utility that provides both gas and electricity to most
+     of its customers, partners with local communities to explore neighborhood-scale alternatives to replacing gas
+     pipes. The Colorado PUC approved five pilot communities in June 2025 (Decision C25-0482): Boulder, Denver and
+     Golden on the Front Range, and Winter Park and Breckenridge in the mountains. Xcel and the communities must file
+     their first projects, or explain why not, by June 1, 2027. Xcel provides both gas and electricity in four of the
+     five; in Winter Park, Xcel provides gas but Mountain Parks Electric, a co-op, provides electricity.</p>
+</header>
+<div class="note">Source: <a href="https://puc.colorado.gov/gas-planning-pilot-program" target="_blank" rel="noopener">Colorado PUC Gas Planning Pilot Program</a>.
+  City limits: U.S. Census Bureau TIGERweb (public domain). <span id="pilot-status"></span></div>
+<section class="state"><div id="pilotmap" role="img"
+  aria-label="Map of the five Gas Planning Pilot Program communities: Boulder, Denver, Golden and Breckenridge, where Xcel Energy provides both gas and electricity, and Winter Park, where Xcel provides gas and Mountain Parks Electric provides electricity."></div></section>
+
+<header>
+  <h2>Where to plan neighborhood-scale electrification first</h2>
   <p>Circles show each neighborhood's priority (darker = higher). Circle size shows the number of homes.
      <span class="tag">Equity</span> marks neighborhoods with high renter and low-income shares.</p>
 </header>
@@ -356,10 +392,12 @@ const fmt = n => (n == null ? 'n/a' : Number(n).toLocaleString());
 // Esri basemap tiles work when the page is opened straight from a file
 // (OpenStreetMap's servers block those requests). Labels go in their own pane above the data.
 const ESRI_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
-function addBasemap(m, extraAttribution) {
+function addBasemap(m, extraAttribution, {placeNames = true} = {}) {
   L.tileLayer(ESRI_TILES + 'World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
     attribution: 'Tiles &copy; Esri' + (extraAttribution ? ' | ' + extraAttribution : ''), maxZoom: 16
   }).addTo(m);
+  // The base tiles have no place names, only faint roads and water; names come from a separate layer.
+  if (!placeNames) return;
   m.createPane('labels');
   m.getPane('labels').style.zIndex = 650;
   m.getPane('labels').style.pointerEvents = 'none';
@@ -472,7 +510,9 @@ Promise.all([
   gasLayer.addData(gas);
   gasHalo.addData(gas);
   if (window.turf) {
-    sameUtilityLayer.addData(sameUtilityAreas(electric, gas));
+    const sameAreas = sameUtilityAreas(electric, gas);
+    sameUtilityLayer.addData(sameAreas);
+    addPilotContext(sameAreas);
   } else {
     status.textContent = 'Could not load the overlap tool, so the same-utility layer is hidden.';
     setLayerAvailable('same', false);
@@ -556,6 +596,87 @@ stateLegend.onAdd = () => {
   return el;
 };
 stateLegend.addTo(stateMap);
+
+// ---- Pilot map: Gas Planning Pilot Program communities (static view) ----
+// The five communities the PUC approved in Decision C25-0482. All partner with Xcel; Winter Park's
+// electricity comes from Mountain Parks Electric, so only its gas is Xcel's.
+const PILOT_COMMUNITIES = {
+  'Boulder': 'Front Range', 'Denver': 'Front Range', 'Golden': 'Front Range',
+  'Winter Park': 'Mountain', 'Breckenridge': 'Mountain'
+};
+const PILOT_COLOR = '#6250d6';
+const PLACES_URL = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/4/query';
+// A fixed frame around the five communities: no dragging, zooming or scroll capture.
+const pilotMap = L.map('pilotmap', {
+  zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false,
+  boxZoom: false, keyboard: false, touchZoom: false, attributionControl: true
+}).fitBounds([[39.40, -106.20], [40.10, -104.60]]);
+// No basemap place names here: the map labels the five communities itself, and the basemap's own
+// names doubled up with them (e.g. two "Denver" labels).
+addBasemap(pilotMap, 'Colorado PUC | U.S. Census Bureau (city limits, roads) | HIFLD/ORNL | Colorado GeoData', {placeNames: false});
+
+// Context: where Xcel provides both electricity and gas (the overlap computed for the statewide map).
+const pilotContext = L.geoJSON(null, {
+  interactive: false,
+  style: {color: '#ffffff', weight: 0.5, fillColor: '#9ec5f4', fillOpacity: 0.55}
+}).addTo(pilotMap);
+function addPilotContext(sameAreas) {
+  pilotContext.addData(sameAreas.features.filter(f => f.properties.key === 'XCEL'));
+  pilotContext.bringToBack();
+}
+
+// Faint road outlines from the Census Bureau (no names): interstates plus state and US highways.
+// They sit above the blue context area and below the pilot communities.
+const ROADS_URL = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Transportation/MapServer';
+const PILOT_FRAME = '-106.3,39.35,-104.5,40.15';
+pilotMap.createPane('roads').style.zIndex = 410;
+pilotMap.createPane('pilots').style.zIndex = 420;
+[{layer: 1, weight: 1.6}, {layer: 4, weight: 0.8}].forEach(({layer, weight}) => {
+  fetch(geojsonQuery(`${ROADS_URL}/${layer}/query`, 'MTFCC', {
+    geometry: PILOT_FRAME, geometryType: 'esriGeometryEnvelope', inSR: '4326',
+    spatialRel: 'esriSpatialRelIntersects', geometryPrecision: '4', maxAllowableOffset: '0.001'
+  }))
+    .then(r => r.json())
+    .then(roads => L.geoJSON(roads, {
+      pane: 'roads', interactive: false,
+      style: {color: '#a3a19a', weight, opacity: 0.4, lineCap: 'round', lineJoin: 'round'}
+    }).addTo(pilotMap))
+    .catch(() => {});  // roads are decoration; the map still works without them
+});
+
+const pilotLayer = L.geoJSON(null, {
+  pane: 'pilots', interactive: false,
+  style: {color: '#ffffff', weight: 1.5, fillColor: PILOT_COLOR, fillOpacity: 0.85}
+}).addTo(pilotMap);
+fetch(geojsonQuery(PLACES_URL, 'BASENAME', {
+  where: "STATE='08' AND BASENAME IN (" + Object.keys(PILOT_COMMUNITIES).map(n => `'${n}'`).join(',') + ')'
+}))
+  .then(r => r.json())
+  .then(places => {
+    pilotLayer.addData(places);
+    places.features.forEach(f => {
+      const name = f.properties.BASENAME;
+      const c = turf.centerOfMass(f).geometry.coordinates;
+      L.marker([c[1], c[0]], {
+        interactive: false, keyboard: false,
+        icon: L.divIcon({className: 'pilot-label', iconSize: [0, 0],
+          html: `<span style="margin-top:16px">${name}<small>${PILOT_COMMUNITIES[name]}</small></span>`})
+      }).addTo(pilotMap);
+    });
+  })
+  .catch(() => {
+    document.getElementById('pilot-status').textContent = 'Could not load the pilot community boundaries. Reload to try again.';
+  });
+
+const pilotLegend = L.control({position: 'topright'});
+pilotLegend.onAdd = () => {
+  const el = L.DomUtil.create('div', 'legend');
+  el.innerHTML =
+    `<div class="row"><svg class="swatch" width="24" height="14" aria-hidden="true"><rect x="1" y="1" width="22" height="12" rx="2" fill="${PILOT_COLOR}" fill-opacity=".85"/></svg>Pilot community (city limits)</div>` +
+    `<div class="row"><svg class="swatch" width="24" height="14" aria-hidden="true"><rect x="1" y="1" width="22" height="12" rx="2" fill="#9ec5f4" fill-opacity=".55"/></svg>Xcel provides both gas and electricity</div>`;
+  return el;
+};
+pilotLegend.addTo(pilotMap);
 
 // ---- Map 2: neighborhood priorities ----
 const DATA = __DATA__;

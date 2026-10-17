@@ -22,7 +22,11 @@ with who holds the data and how to get it. The prototype runs today on sample va
 ## Policy context
 
 - [PUC Gas Planning Pilot Program](https://puc.colorado.gov/gas-planning-pilot-program): neighborhood-scale
-  alternatives to gas pipe replacement in 5 communities. Denver is just starting to pick projects.
+  alternatives to gas pipe replacement under HB 24-1370. The PUC approved five pilot communities in Decision
+  C25-0482 (June 2025): Boulder, Denver, Golden, Winter Park and Breckenridge, all partnering with Xcel. First
+  projects (or an explanation) are due June 1, 2027. The pilot map uses Census TIGERweb city limits for these five, and faint
+  TIGERweb primary and secondary roads (no basemap place names, so labels aren't doubled).
+  In Winter Park, Xcel provides gas but Mountain Parks Electric provides electricity.
 
 ## Cost assumptions
 
