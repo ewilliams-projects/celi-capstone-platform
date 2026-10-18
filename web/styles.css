@@ -5,9 +5,9 @@ body { margin:0; font:14px/1.45 -apple-system, system-ui, sans-serif; color:var(
 .section-intro { padding:16px 20px 8px; }
 .page-header { padding:24px 20px 16px; background:#fff; border-bottom:1px solid var(--line); }
 .page-header h1 { margin:0; font-size:26px; line-height:1.2; letter-spacing:-.01em; }
-.page-header .lede { margin:8px 0 0; max-width:75ch; font-size:15px; line-height:1.55; color:#3d3d3a; }
+.page-header .lede { margin:8px 0 0; font-size:15px; line-height:1.55; color:#3d3d3a; }
 h2 { margin:0; font-size:20px; }
-.section-intro p { margin:4px 0 0; color:var(--muted); max-width:95ch; }
+.section-intro p { margin:4px 0 0; color:var(--muted); }
 .banner { margin:8px 20px 0; padding:8px 12px; background:#fff4d6; border:1px solid #f0d58a; border-radius:6px; }
 .neighborhood-grid { display:grid; grid-template-columns: 1fr 420px; gap:16px; padding:16px 20px 20px; }
 #map { height:calc(100vh - 140px); min-height:420px; border-radius:8px; border:1px solid var(--line); }
@@ -24,8 +24,8 @@ tr { cursor:pointer; } tr:hover td { background:#f4f6f9; }
 .legend .ends { display:flex; justify-content:space-between; color:var(--muted); }
 .popup h3 { margin:0 0 4px; font-size:15px; }
 .popup table td { padding:2px 6px 2px 0; border:none; }
-.note { margin:4px 20px 0; color:var(--muted); font-size:12px; max-width:110ch; }
-.map-text { margin:4px 20px 8px; font-size:13px; color:#3d3d3a; max-width:95ch; }
+.note { margin:0 20px 8px; color:var(--muted); font-size:12px; }
+.map-text { margin:4px 20px 8px; font-size:13px; color:#3d3d3a; }
 .map-text summary { cursor:pointer; font-weight:600; color:var(--ink); padding:4px 0; }
 .map-text ul { margin:6px 0 4px; padding-left:20px; }
 .map-text li { margin-bottom:4px; }
@@ -53,7 +53,7 @@ tr { cursor:pointer; } tr:hover td { background:#f4f6f9; }
 .legend-toggle:focus-visible { outline:2px solid #1c5cab; outline-offset:2px; }
 .legend-body { margin-top:8px; padding-top:8px; border-top:1px solid var(--line); }
 .site-footer { margin:24px 20px 32px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted);
-               font-size:12px; line-height:1.55; max-width:90ch; }
+               font-size:12px; line-height:1.55; }
 .site-footer p { margin:0 0 8px; }
 .county-label span { position:absolute; transform:translate(-50%, -50%); font-size:11px; font-weight:600;
                      color:#2b2b29; white-space:nowrap; letter-spacing:.02em;
