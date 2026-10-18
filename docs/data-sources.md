@@ -77,10 +77,10 @@ Some overlaps between electric territories remain in the source data and aren't 
   with Grand Valley Power). Some service areas really are interleaved more finely than this data shows.
 For exact service territories, use the Colorado PUC's certificated territory maps.
 
-## Basemap terms
+## Map background
 
-The site uses Esri's World Light Gray Canvas tiles without an API key, with Esri's required credit ("Esri, HERE,
-Garmin, © OpenStreetMap contributors, and the GIS user community"). Esri lists this service as in mature support,
-and its terms likely expect an ArcGIS account (free tier) for public websites, especially if the site is used for
-commercial purposes such as a business pitch. Planned: get a free ArcGIS Location Platform key restricted to the
-site's address, or switch to a provider whose terms explicitly allow keyless use.
+The maps don't use a third-party tile service. The background is drawn from U.S. Census Bureau TIGERweb data
+(public domain): state outlines, interstates, and a short list of Colorado city names, so there are no API keys
+or tile terms to manage. An earlier version used Esri's World Light Gray Canvas tiles without a key; Esri lists
+that service as in mature support and its terms likely expect an ArcGIS account for public sites, so it was
+replaced. Trade-off: no street, water or terrain detail when zoomed in.

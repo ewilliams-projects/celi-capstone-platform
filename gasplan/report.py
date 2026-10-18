@@ -128,6 +128,9 @@ TEMPLATE = """<!doctype html>
   #state-status { color:var(--accent); }
   .state { padding:12px 20px 8px; }
   #statemap { height:560px; border-radius:8px; border:1px solid var(--line); }
+  #statemap, #pilotmap, #map { background:#e4e3df; }
+  .city-label span { position:absolute; transform:translate(-50%, -50%); font-size:11px; font-weight:600;
+                     color:#1d2433; white-space:nowrap; text-shadow:0 0 3px #fff, 0 0 3px #fff, 0 0 2px #fff; }
   #pilotmap { height:440px; border-radius:8px; border:1px solid var(--line); }
   .pilot-label span { position:absolute; transform:translate(-50%, -50%); font-size:12px; font-weight:700;
                       color:#26215c; white-space:nowrap; text-align:center; line-height:1.2;
@@ -289,10 +292,10 @@ TEMPLATE = """<!doctype html>
      utilities or the Colorado PUC before relying on them.</p>
   <p>Data: electric territories from HIFLD / Oak Ridge National Laboratory; gas territories from Colorado GeoData
      (State of Colorado, provided without warranty); county boundaries, city limits and roads from the U.S. Census
-     Bureau; pilot communities from the Colorado PUC and Colorado Energy Office. Basemap: Esri, HERE, Garmin,
-     &copy; OpenStreetMap contributors, and the GIS user community.</p>
+     Bureau; pilot communities from the Colorado PUC and Colorado Energy Office. Map background (state outlines,
+     interstates, city names) from the U.S. Census Bureau.</p>
   <p>Page built __BUILT__. Map data loads live from its sources; each source's last-update date is shown above the map.
-     Code: MIT License. Data and basemap keep their own terms.</p>
+     Code: MIT License. Data keeps its own terms.</p>
 </footer>
 <script>
 // ---- Map 1: statewide electric and gas service territories ----
@@ -488,30 +491,64 @@ const gasLineWidth = t => t.dash === OWNERSHIP.private.dash ? 2 : 1.25;
 const gasType = p => GAS_TYPES[(p.TYPE || '').toUpperCase()] || {label: titleCase(p.TYPE) || 'Not reported', color: INK, dash: '2 4'};
 const fmt = n => (n == null ? 'n/a' : Number(n).toLocaleString());
 
-// Esri basemap tiles work when the page is opened straight from a file
-// (OpenStreetMap's servers block those requests). Labels go in their own pane above the data.
-const ESRI_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
-// Esri's required credit for these tiles; the data sources are credited in the notes and footer.
-const BASEMAP_CREDIT = 'Basemap: Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS user community';
-function addBasemap(m, extraAttribution, {placeNames = true} = {}) {
-  L.tileLayer(ESRI_TILES + 'World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-    attribution: BASEMAP_CREDIT + (extraAttribution ? ' | ' + extraAttribution : ''), maxZoom: 16
-  }).addTo(m);
-  // The base tiles have no place names, only faint roads and water; names come from a separate layer.
-  if (!placeNames) return;
-  m.createPane('labels');
-  m.getPane('labels').style.zIndex = 650;
-  m.getPane('labels').style.pointerEvents = 'none';
-  L.tileLayer(ESRI_TILES + 'World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
-    pane: 'labels', maxZoom: 16
-  }).addTo(m);
+// Background drawn from public-domain U.S. Census Bureau data instead of a tile provider: no API key,
+// no third-party tile terms. It shows state outlines (Colorado lighter), and optionally faint
+// interstates and a short list of city names.
+const TIGERWEB = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/';
+const BACKGROUND_CREDIT = 'Background: U.S. Census Bureau';
+const MAP_CITIES = ['Denver', 'Colorado Springs', 'Fort Collins', 'Pueblo', 'Grand Junction', 'Boulder', 'Greeley',
+  'Durango', 'Alamosa', 'Steamboat Springs', 'Glenwood Springs', 'Sterling', 'Lamar', 'Trinidad', 'Gunnison', 'Montrose'];
+function addCensusBackground(m, {interstates = false, cities = false} = {}) {
+  m.attributionControl.addAttribution(BACKGROUND_CREDIT);
+  // Panes: states under everything; interstates just above the utility fills; city names on top.
+  m.createPane('base').style.zIndex = 300;
+  const query = (url, params) => fetch(url + '?' + new URLSearchParams(Object.assign(
+    {outSR: '4326', f: 'geojson', geometryPrecision: '4'}, params))).then(r => r.json());
+
+  query(TIGERWEB + 'State_County/MapServer/0/query', {
+    where: '1=1', outFields: 'STUSAB', maxAllowableOffset: '0.01',
+    geometry: '-112,35,-99,43', geometryType: 'esriGeometryEnvelope', inSR: '4326',
+    spatialRel: 'esriSpatialRelIntersects'
+  }).then(states => L.geoJSON(states, {
+    pane: 'base', interactive: false,
+    style: f => f.properties.STUSAB === 'CO'
+      ? {color: '#9c9a93', weight: 1.2, fillColor: '#f6f6f3', fillOpacity: 1}
+      : {color: '#c9c7c0', weight: 0.8, fillColor: '#ebeae6', fillOpacity: 1}
+  }).addTo(m)).catch(() => {});  // without it the map still works on its plain background
+
+  if (interstates) {
+    m.createPane('interstates').style.zIndex = 430;
+    m.getPane('interstates').style.pointerEvents = 'none';
+    query(TIGERWEB + 'Transportation/MapServer/1/query', {
+      where: '1=1', outFields: 'MTFCC', maxAllowableOffset: '0.002',
+      geometry: COLORADO_BBOX.join(','), geometryType: 'esriGeometryEnvelope', inSR: '4326',
+      spatialRel: 'esriSpatialRelIntersects'
+    }).then(roads => L.geoJSON(roads, {
+      pane: 'interstates', interactive: false, style: {color: '#ffffff', weight: 1.2, opacity: 0.55}
+    }).addTo(m)).catch(() => {});
+  }
+
+  if (cities) {
+    m.createPane('cityLabels').style.zIndex = 660;
+    m.getPane('cityLabels').style.pointerEvents = 'none';
+    query(TIGERWEB + 'Places_CouSub_ConCity_SubMCD/MapServer/4/query', {
+      where: "STATE='08' AND BASENAME IN (" + MAP_CITIES.map(c => `'${c}'`).join(',') + ')',
+      outFields: 'BASENAME', maxAllowableOffset: '0.005'
+    }).then(places => places.features.forEach(f => {
+      const at = turf.centerOfMass(f).geometry.coordinates;
+      L.marker([at[1], at[0]], {
+        pane: 'cityLabels', interactive: false, keyboard: false,
+        icon: L.divIcon({className: 'city-label', iconSize: [0, 0], html: `<span>${esc(f.properties.BASENAME)}</span>`})
+      }).addTo(m);
+    })).catch(() => {});
+  }
 }
 
 const COLORADO_BOUNDS = [[COLORADO_BBOX[1], COLORADO_BBOX[0]], [COLORADO_BBOX[3], COLORADO_BBOX[2]]];
 // Scroll-wheel zoom is off so scrolling the page doesn't get caught by the map;
 // the +/- buttons, double-click and pinch still zoom.
 const stateMap = L.map('statemap', {scrollWheelZoom: false}).fitBounds(COLORADO_BOUNDS);
-addBasemap(stateMap);
+addCensusBackground(stateMap, {interstates: true, cities: true});
 // County lines sit in their own pane: above the utility layers so the 80% fills don't hide them,
 // below the basemap's place names, and never catching clicks meant for the territories.
 stateMap.createPane('counties');
@@ -750,9 +787,8 @@ const pilotMap = L.map('pilotmap', {
   zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false,
   boxZoom: false, keyboard: false, touchZoom: false, attributionControl: true
 }).fitBounds([[39.40, -106.20], [40.10, -104.60]]);
-// No basemap place names here: the map labels the five communities itself, and the basemap's own
-// names doubled up with them (e.g. two "Denver" labels).
-addBasemap(pilotMap, '', {placeNames: false});
+// No city names here: the map labels the five communities itself (and draws its own roads below).
+addCensusBackground(pilotMap);
 
 // Context: where Xcel provides both electricity and gas (the overlap computed for the statewide map).
 const pilotContext = L.geoJSON(null, {
@@ -827,7 +863,7 @@ const max = Math.max(...DATA.map(d => d.priority)), min = Math.min(...DATA.map(d
 const color = p => ramp[Math.min(3, Math.floor(((p - min) / ((max - min) || 1)) * 4))];
 
 const map = L.map('map').setView([39.73, -104.95], 11);
-addBasemap(map);
+addCensusBackground(map, {interstates: true});
 
 const labels = {infrastructure_age: 'Infrastructure age', momentum: 'Electrification momentum',
                 grid_readiness: 'Grid readiness', equity_need: 'Equity need'};

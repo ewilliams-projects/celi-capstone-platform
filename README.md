@@ -44,14 +44,14 @@ it runs the tests, runs `run.py`, and deploys the `site/` folder. One-time setup
 
 ## License and data
 
-The code is under the [MIT License](LICENSE). The map data and basemap are not covered by it; they come from
-third parties and keep their own terms:
+The code is under the [MIT License](LICENSE). The map data is not covered by it; it comes from third parties
+and keeps its own terms:
 
 - Electric territories: HIFLD / Oak Ridge National Laboratory (public use), via the National Broadband Availability Map
 - Gas territories: Colorado GeoData (State of Colorado, provided without warranty)
-- Counties, city limits and roads: U.S. Census Bureau TIGERweb (public domain)
+- Counties, city limits, roads, and the map background (state outlines, interstates, city names):
+  U.S. Census Bureau TIGERweb (public domain)
 - Pilot communities: Colorado PUC and Colorado Energy Office
-- Basemap: Esri, HERE, Garmin, © OpenStreetMap contributors, and the GIS user community
 
 The site loads this data live, so it shows each source's last-update date. Territories are approximate and
 are not official service territory maps; see the "Known data limitations" section on the site and

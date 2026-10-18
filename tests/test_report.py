@@ -25,7 +25,8 @@ class ReportTests(unittest.TestCase):
         self.assertNotIn("Sample A", html)
         # Page structure and required credits
         self.assertEqual(html.count("<main"), 1)
-        self.assertIn("Esri, HERE, Garmin, &copy; OpenStreetMap contributors", html)
+        self.assertIn("Background: U.S. Census Bureau", html)
+        self.assertNotIn("arcgisonline.com", html)  # no third-party tile service
         self.assertIn('integrity="sha384-', html)
         self.assertNotIn("__", html.replace("__proto__", ""))  # no unfilled placeholders
 
