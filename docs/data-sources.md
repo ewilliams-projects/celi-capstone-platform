@@ -19,6 +19,14 @@ with who holds the data and how to get it. The prototype runs today on sample va
 | County boundaries | Map reference (county names show when zoomed in) | [U.S. Census Bureau TIGERweb](https://tigerweb.geo.census.gov/) | Public domain | On the statewide map |
 | Gas service territories | Where Xcel provides gas | [Colorado GeoData](https://geodata.colorado.gov/datasets/47935f56eddd4d1781328c60c8517c96_0/explore) | Public | On the statewide map |
 
+## Saved copies (snapshots)
+
+The website doesn't fetch from these services when someone visits. `scripts/fetch_data.py` saves each
+dataset to `data/snapshots/`, using the same filters and simplification the maps need (for example,
+leaving out WAPA and Deseret, and simplifying territories to about 50 m). `manifest.json` records each
+dataset's source, license, the source's last-edit date (when the service reports one) and the date the
+copy was saved. A weekly GitHub Action refreshes the copies and opens a pull request when anything changed.
+
 ## Policy context
 
 - [PUC Gas Planning Pilot Program](https://puc.colorado.gov/gas-planning-pilot-program): neighborhood-scale

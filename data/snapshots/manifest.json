@@ -1,0 +1,92 @@
+{
+  "electric": {
+    "title": "Electric Retail Service Territories (HIFLD, Oak Ridge National Laboratory)",
+    "publisher": "National Broadband Availability Map copy of HIFLD data",
+    "license": "Public use",
+    "item_url": "https://www.arcgis.com/home/item.html?id=597555ce8e4a4892a030784a7c657fdd",
+    "layer_url": "https://services3.arcgis.com/OYP7N6mAJJCyH6hd/arcgis/rest/services/Electric_Retail_Service_Territories_HIFLD/FeatureServer/0",
+    "features": 74,
+    "source_last_edited": "2025-08-21",
+    "saved_on": "2026-10-17"
+  },
+  "gas": {
+    "title": "Gas Utility Service Territories (Colorado GeoData)",
+    "publisher": "State of Colorado",
+    "license": "Public; provided without warranty",
+    "item_url": "https://geodata.colorado.gov/datasets/47935f56eddd4d1781328c60c8517c96_0/explore",
+    "layer_url": "https://services3.arcgis.com/DgjqnJA1rgO92Soi/arcgis/rest/services/Gas_Utility_Service_Territories/FeatureServer/0",
+    "features": 15,
+    "source_last_edited": "2026-06-04",
+    "saved_on": "2026-10-17"
+  },
+  "counties": {
+    "title": "Colorado counties",
+    "publisher": "U.S. Census Bureau TIGERweb",
+    "license": "Public domain",
+    "item_url": "https://tigerweb.geo.census.gov/",
+    "layer_url": "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/1",
+    "features": 64,
+    "source_last_edited": null,
+    "saved_on": "2026-10-17"
+  },
+  "states": {
+    "title": "State outlines (map background)",
+    "publisher": "U.S. Census Bureau TIGERweb",
+    "license": "Public domain",
+    "item_url": "https://tigerweb.geo.census.gov/",
+    "layer_url": "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/0",
+    "features": 11,
+    "source_last_edited": null,
+    "saved_on": "2026-10-17"
+  },
+  "interstates": {
+    "title": "Interstates in Colorado (map background)",
+    "publisher": "U.S. Census Bureau TIGERweb",
+    "license": "Public domain",
+    "item_url": "https://tigerweb.geo.census.gov/",
+    "layer_url": "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Transportation/MapServer/1",
+    "features": 360,
+    "source_last_edited": null,
+    "saved_on": "2026-10-17"
+  },
+  "cities": {
+    "title": "City names shown on the statewide map",
+    "publisher": "U.S. Census Bureau TIGERweb",
+    "license": "Public domain",
+    "item_url": "https://tigerweb.geo.census.gov/",
+    "layer_url": "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/4",
+    "features": 16,
+    "source_last_edited": null,
+    "saved_on": "2026-10-17"
+  },
+  "pilot_places": {
+    "title": "Gas Planning Pilot Program communities (city limits)",
+    "publisher": "U.S. Census Bureau TIGERweb",
+    "license": "Public domain",
+    "item_url": "https://tigerweb.geo.census.gov/",
+    "layer_url": "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/4",
+    "features": 5,
+    "source_last_edited": null,
+    "saved_on": "2026-10-17"
+  },
+  "pilot_roads_primary": {
+    "title": "Interstates around the pilot communities",
+    "publisher": "U.S. Census Bureau TIGERweb",
+    "license": "Public domain",
+    "item_url": "https://tigerweb.geo.census.gov/",
+    "layer_url": "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Transportation/MapServer/1",
+    "features": 230,
+    "source_last_edited": null,
+    "saved_on": "2026-10-17"
+  },
+  "pilot_roads_secondary": {
+    "title": "State and US highways around the pilot communities",
+    "publisher": "U.S. Census Bureau TIGERweb",
+    "license": "Public domain",
+    "item_url": "https://tigerweb.geo.census.gov/",
+    "layer_url": "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Transportation/MapServer/4",
+    "features": 862,
+    "source_last_edited": null,
+    "saved_on": "2026-10-17"
+  }
+}

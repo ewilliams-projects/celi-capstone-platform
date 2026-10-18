@@ -1,0 +1,53 @@
+# Every Monday, re-download the map data and open a pull request if anything changed.
+# The pull request shows exactly which datasets changed (data/snapshots/*.geojson and manifest.json),
+# so changes to utility territories can be reviewed before they reach the live site. Merging it
+# republishes the site through pages.yml.
+#
+# One-time setup on GitHub: Settings > Actions > General > Workflow permissions >
+# check "Allow GitHub Actions to create and approve pull requests".
+name: Refresh map data
+
+on:
+  schedule:
+    - cron: "0 14 * * 1"   # Mondays 14:00 UTC (7 or 8 am in Colorado)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download the latest map data
+        run: python scripts/fetch_data.py
+      - name: Check the new data still builds and passes the tests
+        run: |
+          python -m unittest
+          python run.py
+      - name: Open a pull request if the data changed
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: data-refresh
+          delete-branch: true
+          add-paths: data/snapshots
+          commit-message: Refresh saved map data
+          title: Refresh saved map data
+          body: |
+            The weekly check found changes in the source map data.
+
+            Review the changed files in `data/snapshots/` (one feature per line, so changed territories
+            stand out) and `manifest.json` (source last-edit dates). Merging republishes the site.
+
+            If a territory changed in a way that affects the "Known data limitations" notes or
+            `docs/data-sources.md`, update those too.
+          labels: data
