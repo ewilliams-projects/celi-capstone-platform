@@ -25,11 +25,12 @@ class SiteTests(unittest.TestCase):
 
     def test_site_has_only_public_files(self):
         self.assertEqual(sorted(p.name for p in self.dir.iterdir()),
-                         ["data.js", "index.html", "site.js", "styles.css"])
+                         ["data.js", "index.html", "national.js", "site.js", "styles.css", "us-overlap.js"])
 
     def test_site_page_leaves_out_the_neighborhood_draft(self):
         self.assertIn('id="statemap"', self.html)
         self.assertIn('id="pilotmap"', self.html)
+        self.assertIn('id="usmap"', self.html)
         self.assertNotIn('id="map"', self.html)
         self.assertNotIn("NEIGHBORHOODS", self.html)
         self.assertNotIn("neighborhoods.js", self.html)
@@ -57,6 +58,16 @@ class SiteTests(unittest.TestCase):
             self.assertIn(f"'{name}'", site_js)
             self.assertEqual(snapshots[name]["type"], "FeatureCollection")
             self.assertTrue(snapshots[name]["features"], name)
+        national_js = (self.dir / "national.js").read_text()
+        self.assertIn("SNAPSHOTS.us_states", national_js)  # state names for the table
+        self.assertTrue(snapshots["us_states"]["features"])
+        # The national shapes load separately, only when the map is about to be seen.
+        self.assertNotIn("us_overlap", snapshots)
+        self.assertNotIn("us_basemap", snapshots)
+        self.assertIn("us-overlap.js", national_js)
+        lazy_js = (self.dir / "us-overlap.js").read_text()
+        self.assertIn("window.SNAPSHOTS.us_overlap = ", lazy_js)
+        self.assertIn("window.SNAPSHOTS.us_basemap = ", lazy_js)
         self.assertIn("manifest", snapshots)
 
 

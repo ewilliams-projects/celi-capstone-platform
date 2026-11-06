@@ -172,6 +172,10 @@ def main():
             "saved_on": date.today().isoformat() if changed else old.get(name, {}).get("saved_on"),
         }
         print(f"{name:<22} {len(features):>4} features  {'updated' if changed else 'unchanged'}")
+    # Built separately by build_national_overlap.py and build_us_basemap.py; these sources rarely or never change.
+    for name in ("us_overlap", "us_states", "us_basemap"):
+        if name in old:
+            manifest[name] = old[name]
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
 
 

@@ -21,12 +21,14 @@ python3 run.py
 ```
 
 This writes:
-- `site/`: **the public website**. Open `site/index.html` in a browser. It has two maps, built from
+- `site/`: **the public website**. Open `site/index.html` in a browser. It has three maps, built from
   the saved map data in `data/snapshots/`:
   1. Colorado electric and gas utility territories by ownership type, where one utility
      provides both, and optional county boundaries. Electric data is federal HIFLD data, gas
      data comes from Colorado GeoData, and county boundaries come from the U.S. Census Bureau.
   2. The five Gas Planning Pilot Program communities.
+  3. Where gas and electric utility territories overlap across the U.S., and whether one utility, one parent
+     company or unrelated companies provide them.
 
   See `docs/data-sources.md` for every source.
 - `output/neighborhoods.html`: **draft, not published.** The same page plus the neighborhood
@@ -53,6 +55,15 @@ snapshots into `site/data.js`.
 python3 scripts/fetch_data.py
 ```
 
+The national overlap map is built separately, because overlaying the whole country takes a few minutes and needs
+one extra package. Its sources are frozen copies, so it doesn't refresh weekly:
+
+```bash
+pip install shapely
+python3 scripts/build_national_overlap.py
+python3 scripts/build_us_basemap.py
+```
+
 Every Monday, `.github/workflows/refresh-data.yml` reruns that script and opens a pull request if any
 data changed, so territory changes can be reviewed before they reach the live site.
 
@@ -72,10 +83,12 @@ The code is under the [MIT License](LICENSE). The map data is not covered by it;
 and keeps its own terms:
 
 - Electric territories: HIFLD / Oak Ridge National Laboratory (public use), via the National Broadband Availability Map
-- Gas territories: Colorado GeoData (State of Colorado, provided without warranty)
+- Gas territories: Colorado GeoData (State of Colorado, provided without warranty); outside Colorado, HIFLD via an
+  ArcGIS Online copy (see `docs/data-sources.md`)
 - Counties, city limits, roads, and the map background (state outlines, interstates, city names):
   U.S. Census Bureau TIGERweb (public domain)
 - Pilot communities: Colorado PUC and Colorado Energy Office
+- National map background: Natural Earth (public domain)
 
 The site shows each source's last-edit date and when its copy was saved. Territories are approximate and
 are not official service territory maps; see the "Known data limitations" section on the site and
@@ -107,10 +120,13 @@ equity need (40%). You can change the weights at the top of `gasplan/score.py`.
 web/index.html              page layout and text (draft-only parts marked NEIGHBORHOODS)
 web/styles.css              styles
 web/site.js                 the statewide utility map and the pilot communities map
+web/national.js             the national gas and electric overlap map
 web/neighborhoods.js        draft neighborhood map (never published)
 data/snapshots/             saved map data and manifest.json
 data/sample/                made-up neighborhood data for the draft
 scripts/fetch_data.py       download and save the map data
+scripts/build_national_overlap.py  compute the national overlap map data (needs shapely)
+scripts/build_us_basemap.py  build the national map's background (needs shapely)
 gasplan/score.py            neighborhood scoring, weights and cost assumptions
 gasplan/data.py             load the neighborhood CSV
 gasplan/report.py           build site/ and the draft page from web/ and the saved data

@@ -77,3 +77,26 @@ tr { cursor:pointer; } tr:hover td { background:#f4f6f9; }
   /* Leave room for the zoom buttons on the left when the legend opens at the top right. */
   #statemap .legend { max-width:calc(100vw - 110px); }
 }
+/* National overlap map */
+.us-table { max-width:640px; margin:4px 0 8px; font-size:12px; background:#fff; }
+.us-table th { position:static; }
+.us-table tr { cursor:default; }
+#usmap { height:600px; border-radius:8px; border:1px solid var(--line); background:#c5d6e2; }
+.us-state-label span { position:absolute; transform:translate(-50%, -50%); font-size:10px; font-weight:600; letter-spacing:.06em;
+                       color:#3d3d3a; text-shadow:0 0 3px #fff, 0 0 3px #fff, 0 0 2px #fff; }
+.us-city-label i { position:absolute; width:5px; height:5px; margin:-2.5px 0 0 -2.5px; border-radius:50%; background:#1d2433;
+                   box-shadow:0 0 0 1px #fff; }
+.us-city-label span { position:absolute; left:5px; top:-7px; font-size:11px; font-weight:600; line-height:14px; color:#1d2433;
+                      white-space:nowrap; text-shadow:0 0 3px #fff, 0 0 3px #fff, 0 0 2px #fff; }
+.us-controls { display:flex; gap:12px 20px; padding:8px 20px 0; flex-wrap:wrap; align-items:center; }
+.us-views { display:flex; gap:6px; flex-wrap:wrap; }
+.us-key { display:flex; flex-wrap:wrap; gap:4px 14px; padding:0; border:none; box-shadow:none; background:none; }
+.us-key .row { margin:0; }
+.us-views button { font:inherit; padding:5px 10px; border:1px solid #c9c7c0; border-radius:6px; background:#fff;
+                   color:var(--ink); cursor:pointer; }
+.us-views button:hover { background:#f4f6f9; }
+.us-views button:focus-visible { outline:2px solid #1c5cab; outline-offset:2px; }
+@media (max-width: 860px) {
+  #usmap { height:65vh; }
+  .us-controls { padding:8px 16px 0; }
+}

@@ -19,6 +19,42 @@ with who holds the data and how to get it. The prototype runs today on sample va
 | County boundaries | Map reference (county names show when zoomed in) | [U.S. Census Bureau TIGERweb](https://tigerweb.geo.census.gov/) | Public domain | On the statewide map |
 | Gas service territories | Where Xcel provides gas | [Colorado GeoData](https://geodata.colorado.gov/datasets/47935f56eddd4d1781328c60c8517c96_0/explore) | Public | On the statewide map |
 
+## National gas and electric overlap (national map)
+
+Built by `scripts/build_national_overlap.py` (needs `shapely`; run by hand, not weekly) and saved as
+`data/snapshots/us_overlap.geojson`. Because it's several megabytes, `run.py` writes it to its own `us-overlap.js`,
+which the page loads only when the map is about to scroll into view.
+
+- **Electric:** the same [HIFLD layer](https://www.arcgis.com/home/item.html?id=597555ce8e4a4892a030784a7c657fdd)
+  as the Colorado map, for the whole country.
+- **Gas:** HIFLD's Natural Gas Local Distribution Company Service Territories, from an
+  [ArcGIS Online copy](https://www.arcgis.com/home/item.html?id=b3c5fcdbf67c4cf2a2a660a859f7a3d2) published by an
+  individual account in February 2021, with no license or description of its own. HIFLD listed the original under
+  [U.S. government works terms](https://catalog.data.gov/dataset/natural-gas-local-distribution-company-service-territories).
+  Most records carry a source date of December 2017. HIFLD Open has closed. Better copies to check before publishing:
+  [NASA NCCS](https://maps.nccs.nasa.gov/mapping/rest/services/hifld_open/energy/FeatureServer/29) (didn't respond
+  when this was built) and [DataLumos](https://www.datalumos.org/datalumos/project/240245/version/V1/view) (blocks scripts).
+- **Colorado gas:** replaced with the newer Colorado GeoData layer, so this map and the Colorado map agree.
+
+**Classes.** Each place is sorted by the utilities listed there: same utility; same parent; uncertain (one of those,
+plus another listed utility); different companies; no electric utility listed. Local public utilities are never
+marked uncertain, as on the Colorado map.
+
+**Matching companies.** 94% of the gas records have no holding company, and owners have changed since 2017, so
+`COMPANIES` in the script is a hand-written table using ownership as of 2026. It hasn't been checked line by line
+against company filings. Local public utilities match when place name and state agree, with exceptions listed in the
+script. Results were checked by listing every matched pair and every "different" pair sharing a word in its names.
+Colorado is a useful test: Xcel comes to about 6,900 sq mi here against about 7,100 on the statewide map, which
+simplifies differently.
+
+**Left out:** federal and regional wholesale suppliers and power agencies, Canadian and territory records, and
+interstate pipelines or producers listed as gas utilities (for example Kinder Morgan: 101 customers, about
+65,000 sq mi).
+
+**Known problems:** gas territories are often whole counties, so area overstates service and shouldn't be read as
+customers. Some records are far too small: Piedmont Natural Gas's largest North Carolina record has 725,399 customers
+in 11 sq mi. A few shapes GEOS can't overlay are skipped with a printed warning; the current build had none.
+
 ## Saved copies (snapshots)
 
 The website doesn't fetch from these services when someone visits. `scripts/fetch_data.py` saves each
@@ -92,3 +128,8 @@ The maps don't use a third-party tile service. The background is drawn from U.S.
 or tile terms to manage. An earlier version used Esri's World Light Gray Canvas tiles without a key; Esri lists
 that service as in mature support and its terms likely expect an ArcGIS account for public sites, so it was
 replaced. Trade-off: no street, water or terrain detail when zoomed in.
+
+The national overlap map follows the same rule with more detail, built by `scripts/build_us_basemap.py` (needs
+`shapely`; run by hand) from [Natural Earth](https://www.naturalearthdata.com/) 5.1.2 (public domain) and saved as
+`data/snapshots/us_basemap.geojson`: state and coastline shapes, Canada and Mexico, lakes, major rivers, interstates and
+city names that appear as you zoom in. It still has no streets, so it won't identify individual neighborhoods.

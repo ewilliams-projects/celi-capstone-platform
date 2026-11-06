@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Targeted Analytics for Equitable Gas Decommissioning</title>
-<meta name="description" content="Maps of Colorado's electric and gas utility territories and the Gas Planning Pilot Program communities, to help plan an equitable transition away from aging gas infrastructure.">
+<meta name="description" content="Maps of where gas and electric utilities overlap across the U.S., Colorado's utility territories and the Gas Planning Pilot Program communities, to help plan an equitable transition away from aging gas infrastructure.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236250d6'/%3E%3Cpath d='M18 5 9 18h6l-2 9 10-14h-6z' fill='%23fff'/%3E%3C/svg%3E">
 <!-- Pinned versions with integrity hashes: the browser refuses any copy that doesn't match exactly. -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -109,6 +109,61 @@
     City limits and roads: U.S. Census Bureau TIGERweb (public domain). <span id="pilot-status" role="status"></span></p>
 </section>
 
+<section aria-labelledby="us-title">
+  <div class="section-intro">
+    <h2 id="us-title">Gas and electric utility overlap across the U.S.</h2>
+    <p>Almost every part of the country has an electric utility, so the shaded areas are the places with gas
+       territory too. The color shows who provides each. Where one company provides both, it can weigh the cost of
+       replacing gas pipes against the cost of electric upgrades. Where two unrelated companies do, the savings from
+       retiring pipes don't reach the company paying for the upgrades. Click an area to see its utilities, and zoom with the + and
+       &minus; buttons, a double-click, or by pinching.</p>
+  </div>
+  <div class="us-controls">
+    <div class="us-views" id="us-views" role="group" aria-label="Jump to part of the map"></div>
+    <div class="legend us-key" id="us-key" aria-label="Map key"></div>
+  </div>
+  <div class="state"><div id="usmap" role="region"
+    aria-label="Map of the United States shaded by whether gas and electricity come from the same utility, the same parent company, or different companies. A table by state follows the map."></div></div>
+  <p class="note">Sources: gas territories from <a href="https://www.arcgis.com/home/item.html?id=b3c5fcdbf67c4cf2a2a660a859f7a3d2" target="_blank" rel="noopener">Natural Gas Local Distribution Company Service Territories</a>,
+    federal HIFLD data (mostly dated 2017), from a copy published on ArcGIS Online in 2021 (HIFLD Open has since closed);
+    Colorado's gas territories from Colorado GeoData. Electric territories from
+    <a href="https://www.arcgis.com/home/item.html?id=597555ce8e4a4892a030784a7c657fdd" target="_blank" rel="noopener">Electric Retail Service Territories</a>,
+    federal HIFLD data from Oak Ridge National Laboratory (utility data from 2022 and 2023). Ownership matched by this project.
+    Background: <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a> (public domain). Computed <span data-saved="us_overlap">November 6, 2026</span>.
+    <span id="us-status" role="status"></span></p>
+  <details class="map-text">
+    <summary>Table: share of each state's gas territory in each group</summary>
+    <p>Shares of the land area inside gas territory, not of customers or homes. Rows may total under 100% where the
+       data lists no electric utility.</p>
+    <table class="us-table">
+      <thead><tr><th>State</th><th class="num">Same utility</th><th class="num">Same parent</th><th class="num">Uncertain</th><th class="num">Different</th><th class="num">Gas territory (sq mi)</th></tr></thead>
+      <tbody id="us-table-rows"><tr><td colspan="6">Loading&hellip;</td></tr></tbody>
+    </table>
+  </details>
+  <details class="map-text">
+    <summary>Known data limitations</summary>
+    <ul>
+      <li>Territories are approximate and are not official service territory maps. State utility commissions and
+          the utilities themselves are authoritative.</li>
+      <li>Gas territories are drawn much larger than the areas with pipes. Many cover whole counties even where a
+          utility serves one town, so don't read shaded land as homes with gas service, and don't read area as customers.</li>
+      <li>Blank land doesn't mean there's no gas service. Some utilities are drawn far too small or left out: Piedmont
+          Natural Gas's largest North Carolina record lists about 725,000 customers in 11 square miles, so much of
+          that state looks empty.</li>
+      <li>Outside Colorado, the gas data is mostly from 2017 and won't show later changes to territories. Its
+          company names are also from then.</li>
+      <li>The data rarely says who owns each gas utility, so this project matched companies using a hand-written
+          ownership table (current as of 2026) and, for local public utilities, matching place names. Small utilities can be missed, which would
+          show them as different companies.</li>
+      <li>Wholesale suppliers such as the Western Area Power Administration, Bonneville Power and the Tennessee Valley
+          Authority are left out, along with interstate pipelines listed as gas utilities.</li>
+      <li>City-owned utilities are never marked uncertain, because the source data draws co-op territories straight
+          over towns. The same rule applies on the Colorado map.</li>
+      <li>Shapes are simplified to about 400 meters, so small towns may look rough and borders may not line up.</li>
+    </ul>
+  </details>
+</section>
+
 <!-- NEIGHBORHOODS: draft section, left out of the published site -->
 <section aria-labelledby="neighborhood-title">
   <div class="section-intro">
@@ -134,9 +189,9 @@
      data that sometimes overlaps or disagrees, and are not official service territory maps. Check with the
      utilities or the Colorado PUC before relying on them.</p>
   <p>Data: electric territories from HIFLD / Oak Ridge National Laboratory; gas territories from Colorado GeoData
-     (State of Colorado, provided without warranty); county boundaries, city limits and roads from the U.S. Census
+     (State of Colorado, provided without warranty) and, outside Colorado, HIFLD; county boundaries, city limits and roads from the U.S. Census
      Bureau; pilot communities from the Colorado PUC and Colorado Energy Office. Map background (state outlines,
-     interstates, city names) from the U.S. Census Bureau.</p>
+     interstates, city names) from the U.S. Census Bureau; on the national map, from Natural Earth.</p>
   <p>Page built __BUILT__. Map data is a saved copy of each source, refreshed weekly when the sources change; the
      dates are shown above the map.
      Code: MIT License. Data keeps its own terms.</p>
@@ -145,6 +200,7 @@
      Order matters: data.js defines SNAPSHOTS, which site.js reads. -->
 <script src="data.js"></script>
 <script src="site.js"></script>
+<script src="national.js"></script>
 <!-- NEIGHBORHOODS: draft scripts, left out of the published site -->
 <script src="neighborhood-data.js"></script>
 <script src="neighborhoods.js"></script>

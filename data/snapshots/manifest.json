@@ -88,5 +88,359 @@
     "features": 862,
     "source_last_edited": null,
     "saved_on": "2026-10-17"
+  },
+  "us_states": {
+    "title": "U.S. state outlines (national map background)",
+    "publisher": "U.S. Census Bureau TIGERweb",
+    "license": "Public domain",
+    "item_url": "https://tigerweb.geo.census.gov/",
+    "layer_url": "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/0",
+    "features": 51,
+    "source_last_edited": null,
+    "saved_on": "2026-11-06"
+  },
+  "us_overlap": {
+    "title": "Where gas and electric utility territories overlap across the U.S. (computed)",
+    "publisher": "Computed from HIFLD data (Oak Ridge National Laboratory; DHS) and Colorado GeoData",
+    "license": "Public use; provided without warranty",
+    "item_url": "https://www.arcgis.com/home/item.html?id=b3c5fcdbf67c4cf2a2a660a859f7a3d2",
+    "layer_url": "https://services5.arcgis.com/HDRa0B57OVrv2E1q/arcgis/rest/services/Natural_Gas_Local_Distribution_Company_Service_Territories/FeatureServer/0",
+    "electric_item_url": "https://www.arcgis.com/home/item.html?id=597555ce8e4a4892a030784a7c657fdd",
+    "electric_layer_url": "https://services3.arcgis.com/OYP7N6mAJJCyH6hd/arcgis/rest/services/Electric_Retail_Service_Territories_HIFLD/FeatureServer/0",
+    "features": 8338,
+    "source_last_edited": null,
+    "saved_on": "2026-11-06",
+    "sq_mi_by_class": {
+      "different": 1300066,
+      "no_electric": 30684,
+      "parent": 23224,
+      "same": 118111,
+      "uncertain": 214300
+    },
+    "sq_mi_by_state": {
+      "AK": {
+        "different": 15469,
+        "no_electric": 4013,
+        "uncertain": 21
+      },
+      "AL": {
+        "different": 29027,
+        "no_electric": 438,
+        "same": 1481
+      },
+      "AR": {
+        "different": 46024,
+        "no_electric": 10,
+        "same": 5
+      },
+      "AZ": {
+        "different": 74186,
+        "no_electric": 4494,
+        "parent": 7196,
+        "same": 6319,
+        "uncertain": 2573
+      },
+      "CA": {
+        "different": 63631,
+        "no_electric": 721,
+        "parent": 138,
+        "same": 47453,
+        "uncertain": 10448
+      },
+      "CO": {
+        "different": 61732,
+        "no_electric": 52,
+        "parent": 1165,
+        "same": 5640,
+        "uncertain": 1495
+      },
+      "CT": {
+        "different": 751,
+        "no_electric": 33,
+        "parent": 639,
+        "same": 23,
+        "uncertain": 1719
+      },
+      "DC": {
+        "different": 66
+      },
+      "DE": {
+        "different": 1630,
+        "no_electric": 0,
+        "parent": 13,
+        "same": 237,
+        "uncertain": 13
+      },
+      "FL": {
+        "different": 13300,
+        "no_electric": 1544,
+        "parent": 62,
+        "same": 242,
+        "uncertain": 695
+      },
+      "GA": {
+        "different": 10370,
+        "no_electric": 3,
+        "parent": 4234,
+        "same": 302,
+        "uncertain": 20507
+      },
+      "HI": {
+        "different": 6422,
+        "no_electric": 14
+      },
+      "IA": {
+        "different": 16007,
+        "no_electric": 1,
+        "same": 994,
+        "uncertain": 4632
+      },
+      "ID": {
+        "different": 12794,
+        "no_electric": 339,
+        "same": 320,
+        "uncertain": 2753
+      },
+      "IL": {
+        "different": 12176,
+        "no_electric": 31,
+        "parent": 1,
+        "same": 2437,
+        "uncertain": 40928
+      },
+      "IN": {
+        "different": 14995,
+        "no_electric": 2,
+        "same": 1601,
+        "uncertain": 4846
+      },
+      "KS": {
+        "different": 42990,
+        "no_electric": 64,
+        "same": 1085,
+        "uncertain": 12771
+      },
+      "KY": {
+        "different": 31545,
+        "no_electric": 20,
+        "parent": 206,
+        "same": 707,
+        "uncertain": 621
+      },
+      "LA": {
+        "different": 41888,
+        "no_electric": 1956,
+        "same": 187,
+        "uncertain": 264
+      },
+      "MA": {
+        "different": 3018,
+        "no_electric": 88,
+        "parent": 581,
+        "same": 200,
+        "uncertain": 1186
+      },
+      "MD": {
+        "different": 6159,
+        "no_electric": 63,
+        "parent": 83,
+        "same": 2024,
+        "uncertain": 135
+      },
+      "ME": {
+        "different": 1218,
+        "no_electric": 72,
+        "parent": 268,
+        "uncertain": 2
+      },
+      "MI": {
+        "different": 15315,
+        "no_electric": 230,
+        "parent": 37,
+        "same": 5248,
+        "uncertain": 19411
+      },
+      "MN": {
+        "different": 30030,
+        "no_electric": 184,
+        "same": 804,
+        "uncertain": 390
+      },
+      "MO": {
+        "different": 25517,
+        "no_electric": 11,
+        "same": 46,
+        "uncertain": 161
+      },
+      "MS": {
+        "different": 24922,
+        "no_electric": 20,
+        "same": 27
+      },
+      "MT": {
+        "different": 30919,
+        "no_electric": 1252,
+        "same": 8611,
+        "uncertain": 11373
+      },
+      "NC": {
+        "different": 14714,
+        "no_electric": 8,
+        "parent": 1,
+        "same": 108,
+        "uncertain": 7
+      },
+      "ND": {
+        "different": 24039,
+        "no_electric": 0,
+        "same": 30,
+        "uncertain": 37296
+      },
+      "NE": {
+        "different": 17556,
+        "no_electric": 1,
+        "same": 24,
+        "uncertain": 0
+      },
+      "NH": {
+        "different": 902,
+        "no_electric": 0,
+        "parent": 2,
+        "uncertain": 613
+      },
+      "NJ": {
+        "different": 6292,
+        "no_electric": 211,
+        "same": 1206,
+        "uncertain": 20
+      },
+      "NM": {
+        "different": 50423,
+        "no_electric": 7,
+        "same": 13,
+        "uncertain": 0
+      },
+      "NV": {
+        "different": 59957,
+        "no_electric": 7296,
+        "parent": 7,
+        "same": 3473
+      },
+      "NY": {
+        "different": 14935,
+        "no_electric": 245,
+        "parent": 3723,
+        "same": 3867,
+        "uncertain": 1386
+      },
+      "OH": {
+        "different": 39045,
+        "no_electric": 124,
+        "parent": 4,
+        "same": 1521,
+        "uncertain": 468
+      },
+      "OK": {
+        "different": 50778,
+        "no_electric": 16,
+        "same": 18
+      },
+      "OR": {
+        "different": 29691,
+        "no_electric": 285
+      },
+      "PA": {
+        "different": 28087,
+        "no_electric": 45,
+        "parent": 4,
+        "same": 1258,
+        "uncertain": 619
+      },
+      "RI": {
+        "different": 4,
+        "no_electric": 31,
+        "parent": 0,
+        "same": 493,
+        "uncertain": 179
+      },
+      "SC": {
+        "different": 13409,
+        "no_electric": 373,
+        "parent": 1034,
+        "same": 2533,
+        "uncertain": 8744
+      },
+      "SD": {
+        "different": 7591,
+        "no_electric": 18,
+        "same": 27,
+        "uncertain": 8730
+      },
+      "TN": {
+        "different": 11387,
+        "no_electric": 99,
+        "parent": 0,
+        "same": 1986,
+        "uncertain": 0
+      },
+      "TX": {
+        "different": 179780,
+        "no_electric": 31,
+        "parent": 722,
+        "same": 669,
+        "uncertain": 5866
+      },
+      "UT": {
+        "different": 20961,
+        "no_electric": 369,
+        "same": 1190,
+        "uncertain": 214
+      },
+      "VA": {
+        "different": 35903,
+        "no_electric": 712,
+        "same": 27
+      },
+      "VT": {
+        "different": 108,
+        "no_electric": 0,
+        "parent": 225,
+        "uncertain": 163
+      },
+      "WA": {
+        "different": 10043,
+        "no_electric": 313,
+        "same": 3002,
+        "uncertain": 4634
+      },
+      "WI": {
+        "different": 11144,
+        "no_electric": 572,
+        "parent": 2549,
+        "same": 6687,
+        "uncertain": 7843
+      },
+      "WV": {
+        "different": 7194,
+        "no_electric": 2
+      },
+      "WY": {
+        "different": 34115,
+        "no_electric": 4238,
+        "parent": 330,
+        "same": 4001,
+        "uncertain": 593
+      }
+    }
+  },
+  "us_basemap": {
+    "title": "National map background: land, water, place names and interstates",
+    "publisher": "Natural Earth",
+    "license": "Public domain",
+    "item_url": "https://www.naturalearthdata.com/",
+    "layer_url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/",
+    "features": 1042,
+    "source_last_edited": null,
+    "saved_on": "2026-11-06"
   }
 }
