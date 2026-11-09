@@ -89,16 +89,6 @@
     "source_last_edited": null,
     "saved_on": "2026-10-17"
   },
-  "us_states": {
-    "title": "U.S. state outlines (national map background)",
-    "publisher": "U.S. Census Bureau TIGERweb",
-    "license": "Public domain",
-    "item_url": "https://tigerweb.geo.census.gov/",
-    "layer_url": "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/0",
-    "features": 51,
-    "source_last_edited": null,
-    "saved_on": "2026-11-06"
-  },
   "us_overlap": {
     "title": "Where gas and electric utility territories overlap across the U.S. (computed)",
     "publisher": "Computed from HIFLD data (Oak Ridge National Laboratory; DHS) and Colorado GeoData",
@@ -432,6 +422,16 @@
         "uncertain": 593
       }
     }
+  },
+  "us_states": {
+    "title": "U.S. state outlines (national map background)",
+    "publisher": "U.S. Census Bureau TIGERweb",
+    "license": "Public domain",
+    "item_url": "https://tigerweb.geo.census.gov/",
+    "layer_url": "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/0",
+    "features": 51,
+    "source_last_edited": null,
+    "saved_on": "2026-11-06"
   },
   "us_basemap": {
     "title": "National map background: land, water, place names and interstates",
