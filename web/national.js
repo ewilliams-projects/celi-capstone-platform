@@ -2,18 +2,24 @@
 // Uses helpers from site.js (snapshot, esc, fmt, titleCase). The shapes are computed ahead of time by
 // scripts/build_national_overlap.py, because overlaying the whole country takes too long in a browser.
 
-// One color per relationship. Blues mean one company or parent could move savings between gas and electric;
-// orange means two unrelated companies. Uncertain also gets a dashed outline, so color is never the only cue.
+// One color per relationship, from the Mainline Analytics brand tokens in brand/brand.css (read at load, so the
+// map follows the brand; the hex values are fallbacks). Amber marks one company that can move savings between gas
+// and electric, faded amber a shared parent, gray unrelated companies, and white no gas or no electric utility
+// listed. Uncertain is Sage with a dashed outline, so color is never the only cue.
+const brandColor = (name, fallback) =>
+  getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+const US_EDGE = brandColor('--ml-ink-muted', '#5A6B6E');
+const US_LAND = brandColor('--ml-surface-raised', '#FFFFFF');
 const US_CLASSES = {
-  same: {label: 'Same utility', color: '#1c5cab',
+  same: {label: 'Same utility', color: brandColor('--ml-accent', '#E8A33D'),
          about: 'One company provides both gas and electricity'},
-  parent: {label: 'Same parent company', color: '#6da7ec',
+  parent: {label: 'Same parent company', color: brandColor('--ml-accent', '#E8A33D'), opacity: 0.35, edge: US_EDGE,
            about: 'Separate gas and electric companies with one parent'},
-  uncertain: {label: 'Uncertain', color: '#c0beb6', dash: '3 3',
+  uncertain: {label: 'Uncertain', color: brandColor('--ml-tint', '#DCEBE6'), dash: '3 3',
               about: 'One of the above, but the data also lists another utility'},
-  different: {label: 'Different companies', color: '#eb6834',
+  different: {label: 'Different companies', color: brandColor('--ml-map-network', '#9AA9AB'),
               about: 'Gas and electricity come from unrelated companies'},
-  no_electric: {label: 'No electric utility listed', color: '#6f6d66',
+  no_electric: {label: 'No electric utility listed', color: US_LAND,
                 about: 'The data lists gas territory here but no retail electric utility'}
 };
 const US_VIEWS = {
@@ -39,19 +45,20 @@ const usNames = names => names.length ? names.map(n => esc(titleCase(n))).join('
 const usLayer = L.geoJSON(null, {
   style: f => {
     const t = US_CLASSES[f.properties.c];
-    return {fillColor: t.color, fillOpacity: 0.9, color: t.dash ? '#6b6a64' : '#ffffff',
-            weight: t.dash ? 0.5 : 0.3, dashArray: t.dash || null};
+    // Pale fills (Sage, faded amber) get a thin gray edge so they stand out from the white land.
+    return {fillColor: t.color, fillOpacity: t.opacity || 1, color: t.dash || t.edge ? US_EDGE : US_LAND,
+            weight: t.dash ? 0.5 : t.edge ? 0.4 : 0.3, opacity: t.edge ? 0.6 : 1, dashArray: t.dash || null};
   },
   onEachFeature: (f, layer) => {
     const p = f.properties, t = US_CLASSES[p.c];
     layer.bindPopup(`<div class="popup"><h3>${esc(t.label)}${p.by ? ': ' + esc(p.by) : ''}</h3>
-      <p style="margin:0 0 4px;color:var(--muted)">${esc(t.about)}.</p><table>
+      <p style="margin:0 0 4px;color:var(--ml-ink-muted)">${esc(t.about)}.</p><table>
       <tr><td>Gas</td><td>${usNames(p.g)}</td></tr>
       <tr><td>Electric</td><td>${usNames(p.e)}</td></tr></table></div>`);
   }
 }).addTo(usMap);
 
-const US_WATER = '#c5d6e2', US_LAND = '#f6f6f3';
+const US_WATER = '#c5d6e2';
 // Place names appear as you zoom in. Natural Earth's scalerank says how prominent each city is.
 const usCityMinZoom = rank => (rank <= 1 ? 0 : rank <= 3 ? 5 : rank <= 4 ? 6 : rank <= 6 ? 7 : 8);
 const US_ROADS_MIN_ZOOM = 6, US_STATE_LABELS_MAX_ZOOM = 6;
@@ -130,10 +137,10 @@ if (window.IntersectionObserver) {
 }
 
 // The key sits above the map rather than on it: at this scale a legend would cover several states.
-const usSwatch = t => `<svg class="swatch" width="24" height="14" viewBox="0 0 24 14" aria-hidden="true"><rect x="1" y="1" width="22" height="12" rx="2" fill="${t.color}" stroke="${t.dash ? '#6b6a64' : t.edge || 'none'}"${t.dash ? ` stroke-dasharray="${t.dash}"` : ''}/></svg>`;
+const usSwatch = t => `<svg class="swatch" width="24" height="14" viewBox="0 0 24 14" aria-hidden="true"><rect x="1" y="1" width="22" height="12" rx="2" fill="${t.color}" fill-opacity="${t.opacity || 1}" stroke="${t.dash || t.edge || t.color === US_LAND ? US_EDGE : 'none'}"${t.dash ? ` stroke-dasharray="${t.dash}"` : ''}/></svg>`;
 document.getElementById('us-key').innerHTML =
   Object.values(US_CLASSES).map(t => `<span class="row">${usSwatch(t)}${esc(t.label)}</span>`).join('') +
-  `<span class="row">${usSwatch({color: US_LAND, edge: '#9c9a93'})}No gas territory listed</span>`;
+  `<span class="row">${usSwatch({color: US_LAND})}No gas territory listed</span>`;
 
 // Buttons above the map jump to Alaska and Hawaii, which sit far outside the main view.
 const usViews = document.getElementById('us-views');

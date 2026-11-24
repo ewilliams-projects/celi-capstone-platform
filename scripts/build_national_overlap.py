@@ -55,6 +55,18 @@ NOT_RETAIL_ELECTRIC = re.compile(
     r"^WPPI|^EAST KENTUCKY POWER|^SAM RAYBURN|^SOUTH TEXAS ELECTRIC COOP|^BADGER POWER|^NORTH CAROLINA EASTERN M|"
     r"^OHIO VALLEY ELECTRIC|^MASSACHUSETTS BAY TRANS|^TUOLUMNE COUNTY PUB POWER")
 NOT_US = {"AB", "BC", "PR", "VI", "GU", "AS", "MP"}
+# Also not retail wires utilities: community choice aggregators buy power, but the local utility still delivers it
+# (e.g. Central Coast Community Energy inside PG&E), and records with a handful of customers are power plants
+# or agencies selling to one industrial site (e.g. Kings River Conservation District, 1 customer). Left in,
+# they made thousands of square miles of PG&E and Eversource territory look uncertain. Counts of 0 (small
+# village systems with no count) and negative counts (HIFLD's "not available", e.g. Texas wires companies) stay.
+MAX_NON_RETAIL_CUSTOMERS = 10
+
+
+def not_retail_record(props):
+    customers = props.get("CUSTOMERS")
+    return ((props.get("TYPE") or "").upper() == "COMMUNITY CHOICE AGGREGATOR"
+            or (customers is not None and 1 <= customers <= MAX_NON_RETAIL_CUSTOMERS))
 # Interstate pipelines and producers with a handful of direct customers, not local gas systems. Kinder
 # Morgan's record alone covers about 65,000 square miles and 101 customers.
 NOT_DISTRIBUTION_GAS = re.compile(
@@ -293,7 +305,7 @@ def load_records():
     for f in download(ELECTRIC_LAYER, "NAME,STATE,TYPE,CUSTOMERS"):
         p = f["properties"]
         p["NAME"] = (p["NAME"] or "").replace("\xa0", " ").strip()
-        if p["STATE"] in NOT_US or NOT_RETAIL_ELECTRIC.search(p["NAME"]):
+        if p["STATE"] in NOT_US or NOT_RETAIL_ELECTRIC.search(p["NAME"]) or not_retail_record(p):
             continue
         geom = clean(f["geometry"])
         if geom:

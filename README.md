@@ -21,7 +21,7 @@ python3 run.py
 ```
 
 This writes:
-- `site/`: **the public website**. Open `site/index.html` in a browser. It has three maps, built from
+- `site/`: **the public website**, styled with the Mainline Analytics brand kit in `brand/` (see `brand/BRAND.md`). Open `site/index.html` in a browser. It has three maps, built from
   the saved map data in `data/snapshots/`:
   1. Colorado electric and gas utility territories by ownership type, where one utility
      provides both, and optional county boundaries. Electric data is federal HIFLD data, gas

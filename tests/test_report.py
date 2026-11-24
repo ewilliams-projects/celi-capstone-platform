@@ -1,4 +1,5 @@
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -25,7 +26,13 @@ class SiteTests(unittest.TestCase):
 
     def test_site_has_only_public_files(self):
         self.assertEqual(sorted(p.name for p in self.dir.iterdir()),
-                         ["data.js", "index.html", "national.js", "site.js", "styles.css", "us-overlap.js"])
+                         ["brand", "data.js", "index.html", "national.js", "site.js", "styles.css", "us-overlap.js"])
+
+    def test_site_includes_every_brand_file_the_page_links(self):
+        for ref in re.findall(r'(?:href|src)="(brand/[^"]+)"', self.html):
+            self.assertTrue((self.dir / ref).is_file(), ref)
+        self.assertIn('href="brand/brand.css"', self.html)
+        self.assertLess(self.html.index('href="brand/brand.css"'), self.html.index('href="styles.css"'))
 
     def test_site_page_leaves_out_the_neighborhood_draft(self):
         self.assertIn('id="statemap"', self.html)
