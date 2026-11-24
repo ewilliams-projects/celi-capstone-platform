@@ -1,0 +1,132 @@
+/* Mainline Analytics — brand styles
+   Import this once, before your own styles:  <link rel="stylesheet" href="/brand/brand.css">
+   Everything is a CSS custom property, so your components should use var(--ml-…) instead of hex codes. */
+
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap");
+
+:root {
+  /* ---- Color (light) ---- */
+  --ml-surface: #F7F5F0;      /* Paper: page background */
+  --ml-surface-raised: #FFFFFF; /* cards and panels on Paper */
+  --ml-ink: #14262B;          /* headings and body text */
+  --ml-ink-muted: #5A6B6E;    /* captions, sources, secondary text (5:1 on Paper) */
+  --ml-line: #D7DDD9;         /* borders, rules, chart gridlines (never text) */
+  --ml-brand: #1F7A72;        /* Mainline Teal: links, primary buttons, key data */
+  --ml-on-brand: #FFFFFF;     /* text on a Teal fill */
+  --ml-deep: #12343B;         /* Slate: hero bands, footer, dark sections */
+  --ml-on-deep: #EEF2EF;      /* text on Slate */
+  --ml-accent: #E8A33D;       /* Pilot Amber: use sparingly, never as text on Paper */
+  --ml-on-accent: #14262B;    /* text on an Amber fill */
+  --ml-tint: #DCEBE6;         /* Sage: callouts, highlighted rows, soft panels */
+  --ml-map-network: #9AA9AB;  /* maps: existing gas network */
+
+  /* ---- Type ---- */
+  --ml-font-display: "Fraunces", Georgia, serif;
+  --ml-font-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
+  --ml-font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+
+  --ml-text-display: clamp(2.5rem, 5vw, 3.5rem); /* hero headline */
+  --ml-text-h1: clamp(2rem, 4vw, 2.5rem);
+  --ml-text-h2: 1.75rem;
+  --ml-text-h3: 1.25rem;
+  --ml-text-body: 1rem;
+  --ml-text-small: 0.875rem;
+  --ml-text-label: 0.75rem;
+
+  /* ---- Space and shape ---- */
+  --ml-space-1: 4px;
+  --ml-space-2: 8px;
+  --ml-space-4: 16px;
+  --ml-space-6: 24px;
+  --ml-space-8: 32px;
+  --ml-space-12: 48px;
+  --ml-space-16: 64px;
+  --ml-radius-sm: 4px;   /* tags */
+  --ml-radius-md: 8px;   /* buttons, inputs, cards */
+  --ml-radius-lg: 16px;  /* large panels, images (echoes the rounded pipe joints) */
+  --ml-content-width: 1120px;
+
+  --ml-focus-ring: 0 0 0 2px var(--ml-surface), 0 0 0 4px var(--ml-brand);
+}
+
+/* Optional dark theme: add data-theme="dark" to <html>. The light theme is the default. */
+[data-theme="dark"] {
+  --ml-surface: #0F1E22;
+  --ml-surface-raised: #16292E;
+  --ml-ink: #EEF2EF;
+  --ml-ink-muted: #9DB0B1;
+  --ml-line: #2A3F44;
+  --ml-brand: #4FB3A6;
+  --ml-on-brand: #0F1E22;
+  --ml-deep: #24525A;
+  --ml-accent: #F0B252;
+  --ml-tint: #2A4A48;
+}
+
+/* ---- Base ---- */
+body {
+  margin: 0;
+  background: var(--ml-surface);
+  color: var(--ml-ink);
+  font-family: var(--ml-font-sans);
+  font-size: var(--ml-text-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, .ml-display {
+  font-family: var(--ml-font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  color: var(--ml-ink);
+}
+.ml-display { font-size: var(--ml-text-display); }
+h1 { font-size: var(--ml-text-h1); }
+h2 { font-size: var(--ml-text-h2); }
+h3 { font-family: var(--ml-font-sans); font-size: var(--ml-text-h3); font-weight: 600; line-height: 1.3; }
+
+a { color: var(--ml-brand); text-underline-offset: 3px; }
+a:hover { color: var(--ml-deep); }
+[data-theme="dark"] a:hover { color: var(--ml-ink); }
+
+:focus-visible { outline: none; box-shadow: var(--ml-focus-ring); border-radius: var(--ml-radius-sm); }
+
+.ml-label, .ml-source {
+  font-family: var(--ml-font-mono);
+  font-size: var(--ml-text-label);
+  color: var(--ml-ink-muted);
+}
+.ml-label { text-transform: uppercase; letter-spacing: 0.12em; font-weight: 500; }
+
+/* ---- Components ---- */
+.ml-btn {
+  display: inline-flex; align-items: center; gap: var(--ml-space-2);
+  font: 600 var(--ml-text-body)/1 var(--ml-font-sans);
+  padding: 12px 20px;
+  border-radius: var(--ml-radius-md);
+  border: 1px solid var(--ml-line);
+  background: var(--ml-surface-raised);
+  color: var(--ml-ink);
+  text-decoration: none;
+  cursor: pointer;
+}
+.ml-btn:hover { border-color: var(--ml-brand); color: var(--ml-ink); }
+.ml-btn-primary { background: var(--ml-brand); border-color: var(--ml-brand); color: var(--ml-on-brand); }
+.ml-btn-primary:hover { background: var(--ml-deep); border-color: var(--ml-deep); color: var(--ml-on-deep); }
+
+.ml-card {
+  background: var(--ml-surface-raised);
+  border-radius: var(--ml-radius-lg);
+  padding: var(--ml-space-6);
+}
+.ml-callout { background: var(--ml-tint); border-radius: var(--ml-radius-lg); padding: var(--ml-space-6); }
+
+.ml-section-dark { background: var(--ml-deep); color: var(--ml-on-deep); }
+.ml-section-dark h1, .ml-section-dark h2, .ml-section-dark h3 { color: var(--ml-on-deep); }
+.ml-section-dark a { color: var(--ml-tint); }
+
+.ml-stat { font-family: var(--ml-font-display); font-weight: 600; font-size: 3.5rem; line-height: 1; color: var(--ml-brand); }
+.ml-highlight { background: var(--ml-accent); color: var(--ml-on-accent); padding: 0 0.2em; border-radius: var(--ml-radius-sm); }
+
+.ml-container { max-width: var(--ml-content-width); margin: 0 auto; padding: 0 var(--ml-space-6); }

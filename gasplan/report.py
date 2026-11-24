@@ -24,6 +24,14 @@ SNAPSHOTS = ROOT / "data" / "snapshots"
 DRAFT_SECTION = re.compile(r"<!-- NEIGHBORHOODS:.*?<!-- /NEIGHBORHOODS -->\n", re.S)
 DRAFT_SECTION_COUNT = 2
 SHARED_FILES = ["styles.css", "site.js", "national.js"]
+# Mainline Analytics brand files the page uses (brand/BRAND.md), copied to <dest>/brand/ at the same paths.
+BRAND = ROOT / "brand"
+BRAND_FILES = [
+    "brand.css",
+    "icons/favicon.svg", "icons/favicon.ico", "icons/apple-touch-icon.png",
+    "logos/mainline-lockup.svg", "logos/mainline-lockup-on-dark.svg",
+    "illustrations/map-icon.svg",
+]
 # Large enough that they get their own script, which the national map loads only when it's about to be seen.
 LAZY_SNAPSHOTS = ["us_overlap", "us_basemap"]
 
@@ -71,6 +79,9 @@ def _copy_shared(dest: Path) -> None:
     dest.mkdir(parents=True, exist_ok=True)
     for name in SHARED_FILES:
         shutil.copyfile(WEB / name, dest / name)
+    for name in BRAND_FILES:
+        (dest / "brand" / name).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(BRAND / name, dest / "brand" / name)
     write_data_js(dest / "data.js")
     lazy = "".join(f"window.SNAPSHOTS.{name} = "
                    + json.dumps(json.loads((SNAPSHOTS / f"{name}.geojson").read_text()), separators=(",", ":")) + ";\n"

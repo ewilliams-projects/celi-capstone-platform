@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Targeted Analytics for Equitable Gas Decommissioning</title>
 <meta name="description" content="Maps of where gas and electric utilities overlap across the U.S., Colorado's utility territories and the Gas Planning Pilot Program communities, to help plan an equitable transition away from aging gas infrastructure.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236250d6'/%3E%3Cpath d='M18 5 9 18h6l-2 9 10-14h-6z' fill='%23fff'/%3E%3C/svg%3E">
+<!-- Mainline Analytics brand: load brand.css before the site's own styles (see brand/BRAND.md). -->
+<link rel="stylesheet" href="brand/brand.css">
+<link rel="icon" href="brand/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="brand/icons/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="brand/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#12343B">
 <!-- Pinned versions with integrity hashes: the browser refuses any copy that doesn't match exactly. -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
@@ -28,9 +33,17 @@
       <line x1="0" y1="0" x2="8" y2="0" stroke="#3d3d3a" stroke-width="1.2"/></pattern>
   </defs>
 </svg>
-<header class="page-header">
-  <h1>Targeted Analytics for Equitable Gas Decommissioning</h1>
-  <p class="lede">As households that can afford it switch to electric heat and appliances, fewer gas customers are
+<header class="site-header">
+  <div class="ml-container site-header-inner">
+    <a class="site-logo" href="./"><img src="brand/logos/mainline-lockup.svg" alt="Mainline Analytics" width="141" height="40"></a>
+    <a class="ml-btn ml-btn-primary" href="#utility-title">See the maps</a>
+  </div>
+</header>
+<section class="hero ml-section-dark" aria-labelledby="page-title">
+  <div class="ml-container hero-inner">
+    <div class="hero-text">
+      <h1 id="page-title" class="ml-display">Targeted Analytics for Equitable Gas Decommissioning</h1>
+      <p class="lede">As households that can afford it switch to electric heat and appliances, fewer gas customers are
      left to pay for maintaining and replacing aging gas pipes. The customers who remain are often renters and
      lower-income households, who already carry the highest energy burdens. This project is building tools to help
      cities and utilities find neighborhoods where planned, neighborhood-scale electrification can take the place of
@@ -38,9 +51,13 @@
      system. Where gas and electricity come from different utilities, the savings from retiring gas pipes don't
      automatically flow to the electric upgrades that replace them, so those areas will need different policies and
      mechanisms to make the change, and identifying them is just as important.</p>
-</header>
-<main id="content">
-<section aria-labelledby="utility-title">
+    </div>
+    <img class="hero-map" src="brand/illustrations/map-icon.svg" width="480" height="480"
+         alt="Simplified gas network map with a few segments highlighted for retirement">
+  </div>
+</section>
+<main id="content" class="ml-container">
+<section class="ml-card map-card" aria-labelledby="utility-title">
   <div class="section-intro">
     <h2 id="utility-title">Colorado utility service territories</h2>
     <p>Electric and gas utility territories by ownership type.
@@ -52,7 +69,7 @@
   </div>
   <div class="state"><div id="statemap" role="region"
     aria-label="Interactive map of Colorado electric and gas utility territories by ownership type. A text summary follows the map."></div></div>
-  <p class="note">Sources (saved copies, checked weekly for changes). Electric: <a href="https://www.arcgis.com/home/item.html?id=597555ce8e4a4892a030784a7c657fdd" target="_blank" rel="noopener">Electric Retail Service Territories</a>,
+  <p class="note ml-source">Sources (saved copies, checked weekly for changes). Electric: <a href="https://www.arcgis.com/home/item.html?id=597555ce8e4a4892a030784a7c657fdd" target="_blank" rel="noopener">Electric Retail Service Territories</a>,
     federal HIFLD data from Oak Ridge National Laboratory (utility data from 2023), from a copy kept by the National
     Broadband Availability Map after HIFLD Open closed; source last updated <span data-edited="electric">August 21, 2025</span>,
     copy saved <span data-saved="electric">October 17, 2026</span>.
@@ -90,7 +107,7 @@
   </details>
 </section>
 
-<section aria-labelledby="pilot-title">
+<section class="ml-card map-card" aria-labelledby="pilot-title">
   <div class="section-intro">
     <h2 id="pilot-title">Gas Planning Pilot Program communities</h2>
     <p>Under House Bill 24-1370, Xcel Energy, Colorado's only investor-owned utility that provides both gas and
@@ -104,12 +121,12 @@
   </div>
   <div class="state"><div id="pilotmap" role="region"
     aria-label="Map of the five Gas Planning Pilot Program communities: Boulder, Denver, Golden and Breckenridge, where Xcel Energy provides both gas and electricity, and Winter Park, where Xcel provides gas and Mountain Parks Electric provides electricity."></div></div>
-  <p class="note">Sources: <a href="https://puc.colorado.gov/gas-planning-pilot-program" target="_blank" rel="noopener">Colorado PUC Gas Planning Pilot Program</a>;
+  <p class="note ml-source">Sources: <a href="https://puc.colorado.gov/gas-planning-pilot-program" target="_blank" rel="noopener">Colorado PUC Gas Planning Pilot Program</a>;
     <a href="https://energyoffice.colorado.gov/gas-planning-pilot-communities" target="_blank" rel="noopener">Colorado Energy Office</a>.
     City limits and roads: U.S. Census Bureau TIGERweb (public domain). <span id="pilot-status" role="status"></span></p>
 </section>
 
-<section aria-labelledby="us-title">
+<section class="ml-card map-card" aria-labelledby="us-title">
   <div class="section-intro">
     <h2 id="us-title">Gas and electric utility overlap across the U.S.</h2>
     <p>Almost every part of the country has an electric utility, so the shaded areas are the places with gas
@@ -124,7 +141,7 @@
   </div>
   <div class="state"><div id="usmap" role="region"
     aria-label="Map of the United States shaded by whether gas and electricity come from the same utility, the same parent company, or different companies. A table by state follows the map."></div></div>
-  <p class="note">Sources: gas territories from <a href="https://www.arcgis.com/home/item.html?id=b3c5fcdbf67c4cf2a2a660a859f7a3d2" target="_blank" rel="noopener">Natural Gas Local Distribution Company Service Territories</a>,
+  <p class="note ml-source">Sources: gas territories from <a href="https://www.arcgis.com/home/item.html?id=b3c5fcdbf67c4cf2a2a660a859f7a3d2" target="_blank" rel="noopener">Natural Gas Local Distribution Company Service Territories</a>,
     federal HIFLD data (mostly dated 2017), from a copy published on ArcGIS Online in 2021 (HIFLD Open has since closed);
     Colorado's gas territories from Colorado GeoData. Electric territories from
     <a href="https://www.arcgis.com/home/item.html?id=597555ce8e4a4892a030784a7c657fdd" target="_blank" rel="noopener">Electric Retail Service Territories</a>,
@@ -165,7 +182,7 @@
 </section>
 
 <!-- NEIGHBORHOODS: draft section, left out of the published site -->
-<section aria-labelledby="neighborhood-title">
+<section class="ml-card map-card" aria-labelledby="neighborhood-title">
   <div class="section-intro">
     <h2 id="neighborhood-title">Where to plan neighborhood-scale electrification first</h2>
     <p>Circles show each neighborhood's priority (darker = higher). Circle size shows the number of homes.
@@ -184,7 +201,9 @@
 </section>
 <!-- /NEIGHBORHOODS -->
 </main>
-<footer class="site-footer">
+<footer class="site-footer ml-section-dark">
+  <div class="ml-container">
+  <img class="footer-logo" src="brand/logos/mainline-lockup-on-dark.svg" alt="Mainline Analytics" width="113" height="32">
   <p><b>About this prototype.</b> Built for a CELI capstone. Utility territories are approximate, drawn from public
      data that sometimes overlaps or disagrees, and are not official service territory maps. Check with the
      utilities or the Colorado PUC before relying on them.</p>
@@ -195,6 +214,7 @@
   <p>Page built __BUILT__. Map data is a saved copy of each source, refreshed weekly when the sources change; the
      dates are shown above the map.
      Code: MIT License. Data keeps its own terms.</p>
+  </div>
 </footer>
 <!-- Classic scripts (not ES modules) so the page also works when opened straight from a file.
      Order matters: data.js defines SNAPSHOTS, which site.js reads. -->
