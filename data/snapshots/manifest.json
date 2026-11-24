@@ -97,7 +97,7 @@
     "layer_url": "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/0",
     "features": 51,
     "source_last_edited": null,
-    "saved_on": "2026-11-06"
+    "saved_on": "2026-11-23"
   },
   "us_overlap": {
     "title": "Where gas and electric utility territories overlap across the U.S. (computed)",
@@ -107,15 +107,15 @@
     "layer_url": "https://services5.arcgis.com/HDRa0B57OVrv2E1q/arcgis/rest/services/Natural_Gas_Local_Distribution_Company_Service_Territories/FeatureServer/0",
     "electric_item_url": "https://www.arcgis.com/home/item.html?id=597555ce8e4a4892a030784a7c657fdd",
     "electric_layer_url": "https://services3.arcgis.com/OYP7N6mAJJCyH6hd/arcgis/rest/services/Electric_Retail_Service_Territories_HIFLD/FeatureServer/0",
-    "features": 8338,
+    "features": 8318,
     "source_last_edited": null,
-    "saved_on": "2026-11-06",
+    "saved_on": "2026-11-23",
     "sq_mi_by_class": {
-      "different": 1300066,
-      "no_electric": 30684,
-      "parent": 23224,
-      "same": 118111,
-      "uncertain": 214300
+      "different": 1300021,
+      "no_electric": 30734,
+      "parent": 23490,
+      "same": 127479,
+      "uncertain": 204671
     },
     "sq_mi_by_state": {
       "AK": {
@@ -130,7 +130,7 @@
       },
       "AR": {
         "different": 46024,
-        "no_electric": 10,
+        "no_electric": 9,
         "same": 5
       },
       "AZ": {
@@ -141,11 +141,11 @@
         "uncertain": 2573
       },
       "CA": {
-        "different": 63631,
-        "no_electric": 721,
+        "different": 63632,
+        "no_electric": 722,
         "parent": 138,
-        "same": 47453,
-        "uncertain": 10448
+        "same": 56637,
+        "uncertain": 1272
       },
       "CO": {
         "different": 61732,
@@ -155,11 +155,11 @@
         "uncertain": 1495
       },
       "CT": {
-        "different": 751,
-        "no_electric": 33,
-        "parent": 639,
+        "different": 748,
+        "no_electric": 36,
+        "parent": 905,
         "same": 23,
-        "uncertain": 1719
+        "uncertain": 1453
       },
       "DC": {
         "different": 66
@@ -209,10 +209,10 @@
         "uncertain": 40928
       },
       "IN": {
-        "different": 14995,
-        "no_electric": 2,
-        "same": 1601,
-        "uncertain": 4846
+        "different": 14971,
+        "no_electric": 36,
+        "same": 1790,
+        "uncertain": 4658
       },
       "KS": {
         "different": 42990,
@@ -221,21 +221,21 @@
         "uncertain": 12771
       },
       "KY": {
-        "different": 31545,
+        "different": 31546,
         "no_electric": 20,
         "parent": 206,
         "same": 707,
         "uncertain": 621
       },
       "LA": {
-        "different": 41888,
+        "different": 41881,
         "no_electric": 1956,
         "same": 187,
         "uncertain": 264
       },
       "MA": {
-        "different": 3018,
-        "no_electric": 88,
+        "different": 3017,
+        "no_electric": 89,
         "parent": 581,
         "same": 200,
         "uncertain": 1186
@@ -254,47 +254,47 @@
         "uncertain": 2
       },
       "MI": {
-        "different": 15315,
-        "no_electric": 230,
+        "different": 15316,
+        "no_electric": 231,
         "parent": 37,
         "same": 5248,
         "uncertain": 19411
       },
       "MN": {
-        "different": 30030,
+        "different": 30031,
         "no_electric": 184,
         "same": 804,
         "uncertain": 390
       },
       "MO": {
-        "different": 25517,
+        "different": 25514,
         "no_electric": 11,
         "same": 46,
         "uncertain": 161
       },
       "MS": {
-        "different": 24922,
+        "different": 24921,
         "no_electric": 20,
         "same": 27
       },
       "MT": {
-        "different": 30919,
+        "different": 30920,
         "no_electric": 1252,
-        "same": 8611,
+        "same": 8610,
         "uncertain": 11373
       },
       "NC": {
-        "different": 14714,
+        "different": 14713,
         "no_electric": 8,
         "parent": 1,
         "same": 108,
         "uncertain": 7
       },
       "ND": {
-        "different": 24039,
+        "different": 24042,
         "no_electric": 0,
-        "same": 30,
-        "uncertain": 37296
+        "same": 27,
+        "uncertain": 37297
       },
       "NE": {
         "different": 17556,
@@ -334,7 +334,7 @@
         "uncertain": 1386
       },
       "OH": {
-        "different": 39045,
+        "different": 39051,
         "no_electric": 124,
         "parent": 4,
         "same": 1521,
@@ -377,14 +377,14 @@
         "uncertain": 8730
       },
       "TN": {
-        "different": 11387,
+        "different": 11383,
         "no_electric": 99,
         "parent": 0,
         "same": 1986,
         "uncertain": 0
       },
       "TX": {
-        "different": 179780,
+        "different": 179781,
         "no_electric": 31,
         "parent": 722,
         "same": 669,
@@ -408,8 +408,8 @@
         "uncertain": 163
       },
       "WA": {
-        "different": 10043,
-        "no_electric": 313,
+        "different": 10032,
+        "no_electric": 325,
         "same": 3002,
         "uncertain": 4634
       },
@@ -421,7 +421,7 @@
         "uncertain": 7843
       },
       "WV": {
-        "different": 7194,
+        "different": 7190,
         "no_electric": 2
       },
       "WY": {
